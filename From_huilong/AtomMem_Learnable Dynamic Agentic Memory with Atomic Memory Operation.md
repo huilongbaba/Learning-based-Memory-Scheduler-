@@ -84,7 +84,13 @@ $$\mathcal{J}(\theta) = \mathbb{E}\left[\frac{1}{G}\sum_{i=1}^{G} \rho_\theta^i 
 - 检索数 K=6 最优；chunk size 对性能影响不大（模型鲁棒）
 
 ## RQ
-### 1. 怎么让 agent 的记忆管理从静态流程变为动态自适应？
-将记忆管理解构为原子 CRUD 操作，建模为 POMDP，agent 每步自主决策执行哪些操作（而非遵循固定 pipeline）。操作的原子性（完备+最小+任务无关）保证了表达能力和泛化性。
-### 2. 怎么学习这个记忆策略？
-直接用 GRPO 端到端优化，任务级终端奖励均匀分配到所有 token（含 CRUD 操作 token）。训练过程中 agent 自发学到了 task-aligned 的记忆管理模式（如减少冗余 Read、增加 Update/Delete 维护紧凑记忆）。
+
+这个论文只处理in-chat memory,不处理cross-chat memory。还是以QA为牵引。
+
+### 1. 如何将开发者定义的静态记忆处理策略，改造成动态的记忆处理策略？
+'''
+Despite their theoretical appeal, these methods share a common limitation:
+The memory workflow is hard-coded by experts.This rigidity prevents the agent from adapting its
+memory strategy to different tasks.
+'''
+### 2. 如何将记忆的动态处理策略formalize as decision-making process，再in cooperate with RL learning paradigm?
