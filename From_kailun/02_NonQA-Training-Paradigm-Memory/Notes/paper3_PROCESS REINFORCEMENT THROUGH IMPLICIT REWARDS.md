@@ -85,7 +85,6 @@ PRIME 的训练流程分为两个阶段：
 
 $$r_p(a_t) = \beta \log \frac{\pi_R(a_t | C)}{\pi_{\text{ref}}(a_t | C)}$$
 
-> 论文符号：$r_\phi(y_t) = \beta \log \frac{\pi_\phi(y_t|y_{<t})}{\pi_{\text{ref}}(y_t|y_{<t})}$
 
 **优势函数（Eq. 5）：**
 
