@@ -55,15 +55,20 @@ $$\hat{a} = \pi_\theta(\cdot \mid q, C)$$
 在多轮场景下，表达为：
 
 $$\hat{a}_N \sim \pi_\theta(\cdot \mid q, C_N)$$
+
 其中：
+
 $$C_N = f(q, m_s, v(q, m_l), \text{other signals})$$
+
 另外：
+
 $$m_s^{(t)} = g_s(m_s^{(t-1)}, q^{(t)}, o^{(t)})$$
+
 $$m_l^{(t)} = g_l(m_l^{(t-1)}, m_s^{(t)}, \text{trigger})$$
+
 ### 核心优化目标
 
-1. 提高输出准确性 — 让 $\hat{a}$ 更接近正确答案
-2. 减少 Agent 思考轮数 — 降低 $N$（Agent loop 的迭代次数）
+提高输出准确性 — 让 $\hat{a}$ 更接近正确答案
 
 ### 统一视角
 
