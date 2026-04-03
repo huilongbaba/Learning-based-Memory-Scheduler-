@@ -1,6 +1,6 @@
 # Process Reinforcement through Implicit Rewards (PRIME)
 
-**Source:** [arXiv:2502.01456v2](https://arxiv.org/abs/2502.01456v2) (Feb 2025, revised Sep 2025)
+**Source:** [arXiv:2502.01456v2](https://arxiv.org/abs/2502.01456) (2025-02, revised 2025-09)
 
 ---
 
@@ -8,182 +8,116 @@
 
 |论文原始符号|框架符号|说明|
 |---|---|---|
-|$x$|$q$|输入 prompt / question|
-|$y$|$T$|完整的生成轨迹（response）|
-|$y_t$|$a$ (在时间步 $t$)|第 $t$ 步的 token/action|
-|$y_{<t}$|$C$|当前步之前的上下文（prompt + 已生成 token）|
-|$\pi_\theta$|$\pi$|策略模型（policy）|
-|$\theta$|$\theta$|策略模型参数（一致）|
-|$\pi_\phi$|新增 $\pi_R$（隐式 PRM）|隐式过程奖励模型，本质是一个语言模型|
-|$\pi_{\text{ref}}$|新增 $\pi_{\text{ref}}$|参考模型，用于计算隐式奖励的基准分布|
-|$r_o(y)$|新增 $r_o$|结果级奖励（outcome reward），由验证器给出|
-|$r_\phi(y_t)$|新增 $r_p$|隐式过程奖励（token 级 dense reward）|
-|$A_t$|无直接对应，沿用 $A_t$|优势函数（advantage function）|
-|$K$|无直接对应，沿用 $K$|每个 prompt 采样的响应数量|
-|$\beta$|无直接对应，沿用 $\beta$|隐式奖励的温度/缩放系数|
-|$V(y_{<t})$|无直接对应，沿用 $V$|价值模型预测的状态价值|
+|$x$ (prompt)|$q$|用户输入 / 问题|
+|$y$ (response)|$T$|模型生成的完整轨迹|
+|$y_t$ (token at step $t$)|$a$|单步动作（token 级）|
+|$y_{< t}$ (prefix)|$C$|当前上下文|
+|$\pi_\theta$ (policy)|$\pi$|模型策略|
+|$\theta$ (policy params)|$\theta$|一致，无需映射|
+|$r_o$ (outcome reward)|—|结果级奖励，框架未单独定义，建议新符号 $r_o$|
+|$r_\phi(y_t)$ (implicit process reward)|—|token 级过程奖励，建议新符号 $r_p$|
+|$\pi_\phi$ (Implicit PRM)|—|隐式过程奖励模型，本质是一个 causal LM；建议符号 $M_r$（reward model）|
+|$\pi_{\text{ref}}$ (reference model)|—|参考模型，用于计算隐式奖励；建议符号 $M_{\text{ref}}$|
+|$A_t$ (advantage)|—|优势函数，框架未覆盖；建议符号 $A_t$|
+|$V$ (value model)|—|价值模型，框架未覆盖；建议符号 $V$|
 
-> 本文的核心创新不在于 memory 模块的引入，而在于将隐式过程奖励模型（Implicit PRM） 作为一种可在线更新的 dense reward 信号源。在框架语境下，Implicit PRM 可类比为一种 参数化的短期记忆 $m_s$，它编码了"当前策略分布下，每个 token 对最终正确性的贡献"这一知识，并随训练在线更新。
+> 本文核心概念集中在 RL 训练侧（policy gradient、advantage estimation），与框架中 memory 相关符号（$m_s$, $m_l$, $v$, $R$）无直接对应。论文不涉及显式的 memory 操作。
 
 ---
 
-## 1. Problem Setting
+## A. QA 依赖度分析
 
-### 要解决的问题
+**Reward 是否 100% 来自 QA 结果？**
 
-大语言模型（LLM）的强化学习训练中，**稀疏的结果级奖励**（outcome reward，仅在生成完毕后给出一个标量）存在三个核心问题：（1）鼓励"答案碰巧正确但过程错误"的伪解；（2）样本效率低；（3）信用分配困难（credit assignment）。密集的过程奖励（process reward）理论上可以缓解上述问题，但面临三大挑战（§2.2）：
+是。PRIME 的 outcome reward $r_o$ 完全由 rule-based verifier 决定：数学题使用 ground-truth 精确匹配（$r_o^{\text{math}} = \mathbb{1}[\text{matched}]$），编程题使用测试用例通过率（$r_o^{\text{code}} = \frac{\sum \text{passes}}{\sum \text{test cases}}$）。隐式过程奖励 $r_\phi(y_t) = \beta \log \frac{\pi_\phi(y_t \mid y_{< t})}{\pi_{\text{ref}}(y_t \mid y_{< t})}$ 虽然提供 token 级密集信号，但 Implicit PRM 本身通过 cross-entropy loss 以 outcome label 为监督进行训练，因此**所有奖励信号最终追溯到 QA 正确性**。
 
-- **C1：过程奖励难以定义**——步骤边界不明确，逐 token 标注成本极高
-- **C2：PRM 在线更新不可扩展**——传统 PRM 需要步骤级标注，无法在 RL 训练中实时更新，导致分布偏移和奖励黑客（reward hacking）
-- **C3：显式奖励建模带来额外开销**——需要单独的数据收集和训练阶段
+**去掉 QA 问题后，训练流程是否完全崩溃？**
 
-### 形式化定义
+是。PRIME 的整个流程——rollout 生成、outcome verifier 打分、Implicit PRM 在线更新、advantage 计算——均以 QA 正确性为锚点。无 QA label 则无法：(1) 筛选 prompt 难度（online prompt filtering 需要 accuracy range），(2) 更新 PRM（CE loss 需要 $r_o(y)$ 作为标签），(3) 计算 outcome 部分的 advantage。
 
-- **输入：** prompt $q \sim D$（数学或编程问题）
-- **输出：** 轨迹 $T = (a_1, a_2, \dots, a_n)$，即模型逐 token 生成的完整响应
-- **目标：** 学习策略 $\pi(a_t | q, C)$ 最大化期望累积折扣回报
+**是否存在隐含的非 QA 奖励成分？**
 
-### 任务类型与数据集
+部分存在。隐式过程奖励的数学形式 $r_\phi(y_t) = \beta \log \frac{\pi_\phi(y_t \mid y_{< t})}{\pi_{\text{ref}}(y_t \mid y_{< t})}$ 本质上度量的是"当前 token 相对于参考分布的偏离程度"，这可以被视为一种 **implicit information gain** 信号——它奖励模型在推理过程中偏离参考策略的方向。然而，这种信号的"方向"仍然由 QA outcome 间接塑造（通过 PRM 的在线训练）。
 
-- **任务：** 竞赛级数学推理、编程
-- **评测基准：** AIME 2024, AMC, MATH-500, Minerva Math, OlympiadBench, LeetCode, LiveCodeBench
-- **基座模型：** Qwen2.5-Math-7B-Base
-
-> 本文的问题定义精准地抓住了 RL for LLM 的痛点。与 DeepSeek-R1 等工作类似，都认为密集奖励是提升推理能力的关键，但 PRIME 提出了更可扩展的解决方案。
+> PRIME 的 implicit process reward 训练监督仍完全依赖 QA outcome，属于 QA-derived dense reward 而非 QA-independent reward。
 
 ---
 
-## 2. Training Procedure
+## B. Memory 价值盲区
 
-### 训练流程
+**方法能否激励存储"当前无对应问题、未来可能有用"的信息？**
 
-PRIME 的训练流程分为两个阶段：
+不能。PRIME 不涉及显式的 memory 操作（无 store/retrieve/delete/update）。其"记忆"完全隐含在模型参数 $\theta$ 和 PRM 参数 $\phi$ 中。模型无法主动决定"记住某些信息以备后用"，所有参数更新都由当前 batch 的 QA 表现驱动。
 
-**阶段一：SFT 热身。** 在基座模型上进行监督微调，教模型学习"行动导向的思维链"（action-centric chain-of-thought）推理模式（§D）。使用 230K 数据，包含数学、编程和生物医学。
+**Delete/Update 是否也完全由 QA 表现驱动？**
 
-**阶段二：在线 RL 训练（核心）。** 算法流程（Algorithm 1）：
+不适用。PRIME 没有 memory operation 的概念。参数更新（相当于隐式的"记忆更新"）完全由 policy gradient 和 PRM 的 CE loss 驱动，两者都以 QA outcome 为最终信号。
 
-1. **初始化：** 策略模型 $\pi$、隐式 PRM $\pi_R$、参考模型 $\pi_{\text{ref}}$ 均从 SFT 模型初始化
-2. **采样：** 对每个 prompt $q$，策略模型生成 $K$ 个响应 ${T^1, \dots, T^K}$
-3. **结果验证：** 使用规则验证器计算结果奖励 $r_o(T^i)$
-4. **在线过滤：** 过滤掉全对或全错的 prompt（保留中等难度）
-5. **计算隐式过程奖励：** 通过 $\pi_R$ 和 $\pi_{\text{ref}}$ 的对数概率差得到 token 级 dense reward
-6. **更新隐式 PRM：** 使用交叉熵损失在当前 rollout 上更新 $\pi_R$（在线更新）
-7. **计算优势函数并更新策略：** 结合过程奖励和结果奖励计算 advantage，使用 PPO clip loss 更新 $\pi$
+**是否区分了不同类型的记忆价值（informational / procedural / contextual）？**
 
-### Memory 如何参与训练
+未区分。PRIME 的 action-centric chain-of-thought 框架（ASSESS, ADVANCE, VERIFY, SIMPLIFY, SYNTHESIZE, PIVOT, OUTPUT）暗示了不同类型的推理步骤，但未将其与不同类型的记忆价值关联。所有步骤的奖励权重由 Implicit PRM 统一分配。
 
-在框架语境下，隐式 PRM $\pi_R$ 扮演了一种**可学习的参数化记忆**角色：
-
-- 它"记住"了当前策略分布下，每个 token 对最终结果的贡献度
-- 通过**在线更新**，这种记忆随策略演化而同步演化，避免分布偏移
-- 参考模型 $\pi_{\text{ref}}$ 则是一种**冻结的长期记忆** $m_l$，提供稳定的基准分布
-
-### 核心公式
-
-**隐式过程奖励（Eq. 3）：**
-
-$$r_p(a_t) = \beta \log \frac{\pi_R(a_t | C)}{\pi_{\text{ref}}(a_t | C)}$$
-
-
-**优势函数（Eq. 5）：**
-
-$$A^i_t = \underbrace{\sum_{s=t}^{|T^i|} \gamma^{s-t} \cdot \left( r_p(a^i_s) - \frac{1}{K-1}\sum_{j \neq i} r_p(\bar{a}^j) \right)}_{\text{RLOO with implicit process rewards}} + \underbrace{r_o(T^i) - \frac{1}{K-1}\sum_{j \neq i} r_o(T^j)}_{\text{RLOO with outcome rewards}}$$
-
-> 论文中 $\bar{r}_\phi(y^j)$ 指第 $j$ 个响应的平均隐式过程奖励。
-
-**PPO clip 损失（Eq. 6）：**
-
-$$L_{\text{CLIP}}(\theta) = \mathbb{E}_t \left[ \min\left( \frac{\pi(a_t|C)}{\pi_{\text{old}}(a_t|C)} A_t, ; \text{clip}\left(\frac{\pi(a_t|C)}{\pi_{\text{old}}(a_t|C)}, 1-\epsilon, 1+\epsilon \right) A_t \right) \right]$$
-
-**隐式 PRM 在线更新损失（Eq. in Algorithm 1, step 8）：**
-
-$$L_{\text{CE}}(\phi) = -\mathbb{E}_{(q, T, r_o)} \left[ r_o \cdot \log \sigma(r_R(T)) + (1 - r_o) \cdot \log(1 - \sigma(r_R(T))) \right]$$
-
-其中 $r_R(T) = \beta \log \frac{\pi_R(T)}{\pi_{\text{ref}}(T)}$ 为序列级隐式奖励，$\sigma$ 为 sigmoid 函数。
-
-> PRIME 的关键洞察在于：隐式 PRM 的训练只需要结果级标签（outcome labels），却能产出 token 级的密集奖励。这打破了"密集奖励需要密集标注"的常规假设，使在线 PRM 更新变得可行。
+> PRIME 的视角是"过程奖励"而非"记忆管理"。其 token-level dense reward 的粒度足够精细，理论上可以区分不同步骤的贡献，但当前框架缺乏将这种区分显式化的机制。
 
 ---
 
-## 3. Reward Signal
+## C. QA 评估的局限性
 
-### 奖励信号类型
+**评估中是否有任何非 QA 指标？**
 
-PRIME 使用**双重奖励信号**的组合：
+极少。论文报告了以下指标：(1) pass@1 / avg@16 准确率（纯 QA），(2) 训练 reward 曲线（QA-derived），(3) PRM 分类准确率（衡量 PRM 区分正确/错误 rollout 的能力，间接 QA-derived），(4) sample efficiency（达到相同 training reward 所需步数）。唯一接近非 QA 的指标是 **PRM accuracy**（Figure 5），它衡量 PRM 本身的校准质量，但其标签仍来自 QA outcome。
 
-1. **结果奖励 $r_o$（稀疏，外部）：** 规则验证器给出，数学任务为精确匹配（0/1），编程任务为通过率
-2. **隐式过程奖励 $r_p$（密集，内部）：** 由隐式 PRM 通过对数概率比计算，token 级别
+**如果构造"关键信息存在但从不被提问"的测试，该方法预期表现如何？**
 
-### 奖励与 Memory 的交互
+无法评估。PRIME 的所有评估场景都是"给定问题 → 生成解答 → 验证正确性"。如果信息从不被提问，PRIME 没有任何机制来衡量该信息是否被"记住"或"利用"。
 
-- 隐式 PRM $\pi_R$ 本身就是奖励的来源——它通过与参考模型 $\pi_{\text{ref}}$ 的对数概率差产生 token 级奖励
-- $\pi_R$ 在训练过程中使用结果奖励 $r_o$ 作为监督信号进行在线更新（CE loss）
-- 这形成了一个闭环：$r_o$ → 更新 $\pi_R$ → 产生 $r_p$ → 更新 $\pi$ → 产生新的 rollout → $r_o$
+**消融实验是否揭示了 QA 指标无法捕捉的现象？**
 
-### 关键实验发现
-
-- **密集 vs 稀疏奖励（§4.3）：** PRIME 相比仅用结果奖励的 RLOO，训练奖励提升 6.9%，样本效率提升 2.5 倍
-- **在线更新至关重要（§5.1）：** 离线 PRM 的分类精度随训练进行逐渐下降（reward hacking），在线 PRM 则持续上升
-- **奖励优于价值（§5.4）：** 将隐式 PRM 作为 reward model 使用远优于作为 value model 使用
-
-> PRIME 的奖励设计优雅地绕过了 PRM 需要步骤级标注的瓶颈。从 reward shaping 的视角看（§C.3），隐式过程奖励满足基于势函数的奖励塑形（PBRS）定义，理论上不改变最优策略但加速学习。
+有暗示。论文 §5.4 发现，将 Implicit PRM 用作 value model（baseline subtraction）不如用作 reward model（return calculation），即使两者包含相同的信息量。这暗示 **信号的传递方式**（而非信号本身）对学习效果有重大影响——这是 QA 准确率无法直接反映的结构性差异。此外，offline PRM 的 accuracy 下降（Figure 5）说明分布偏移的存在，但 QA benchmark 无法捕捉这种渐进退化。
 
 ---
 
-## 4. Inference Procedure
+## D. 非 QA 范式的可能性
 
-### 推理时的流程
+**方法中是否有可脱离 QA 独立评估的组件？**
 
-推理时，PRIME 的行为与标准自回归生成相同：
+有。Implicit PRM 的核心公式 $r_\phi(y_t) = \beta \log \frac{\pi_\phi(y_t \mid y_{< t})}{\pi_{\text{ref}}(y_t \mid y_{< t})}$ 本身不依赖 QA——它度量的是 token 级的分布偏移。如果将其解耦于 QA 训练，可以将其视为一种 **intrinsic reward**（类似于 curiosity-driven exploration 中的 prediction error）。PRM accuracy 本身也可以作为独立的 reward model 质量指标。
 
-- **策略模型 $\pi$** 逐 token 生成响应
-- **无需使用隐式 PRM**——PRM 仅在训练阶段使用
-- 最终模型 Eurus-2-7B-PRIME 是一个独立的语言模型，推理成本与普通 LLM 无异
+**框架能否接入非 QA reward？需要哪些修改？**
 
-### 与训练阶段的差异
+可以，修改量较小。PRIME 的 advantage 公式（Eq. 5）将 outcome reward 和 process reward 分开计算后求和：
 
-|方面|训练|推理|
-|---|---|---|
-|隐式 PRM|在线使用并更新|不使用|
-|参考模型|提供基准 logprobs|不使用|
-|结果验证器|提供 $r_o$ 信号|不使用|
-|采样方式|每 prompt $K$ 个响应|标准采样（pass@1 或 best-of-N）|
+$$A_t^i = \underbrace{\sum_{s=t}^{\lvert y^i \rvert} \gamma^{s-t} \cdot \left( r_\phi(y_s^i) - \frac{1}{K-1} \sum_{j \neq i} r_\phi(y^j) \right)}_{\text{process}} + \underbrace{r_o(y^i) - \frac{1}{K-1} \sum_{j \neq i} r_o(y^j)}_{\text{outcome}}$$
 
-> 推理时不需要额外模型是 PRIME 的实用优势之一。与需要 PRM 做 best-of-N 搜索的方法不同，PRIME 将密集奖励的价值"蒸馏"到了策略模型本身。
+只需将 $r_o$ 替换为非 QA reward（如 memory utilization rate、information coverage），即可接入非 QA 信号。Implicit PRM 的在线更新也只需将 CE loss 的标签从 QA outcome 替换为新的 reward 信号。**关键修改点**：(1) 设计新的 outcome verifier 替代 exact match / test case；(2) 确保新 reward 是 verifiable 的（PRIME 依赖 unhackable reward）。
+
+**Memory operation 设计是否暗示了某种内在质量标准？**
+
+间接暗示。论文提出的 action-centric CoT 框架（Table 9）定义了 7 种推理动作（ASSESS, ADVANCE, VERIFY, SIMPLIFY, SYNTHESIZE, PIVOT, OUTPUT），这隐含了一种"好的推理过程应该具备多样化步骤类型"的质量标准。此外，Implicit PRM 从 SFT 模型初始化优于专门训练的 PRM（§5.1），暗示"与 policy 同分布"是一种内在的 reward model 质量标准。
+
+> PRIME 的架构设计是 非 QA reward 友好的：process reward 与 outcome reward 的解耦计算、PRM 的在线更新机制、以及不依赖 step-level 人工标注的特性，都使得非 QA 信号的接入具有较低的工程门槛。这是 PRIME 区别于传统 PRM 方法的核心优势之一。
 
 ---
 
 ## 5. RQ 分析
 
-### RQ1: What is memory?
+### Q1: QA reward 是否是 memory 的充分训练信号？
 
-PRIME 不显式引入 memory 模块，但隐式 PRM ($\pi_R$) 可被理解为一种参数化的过程评估记忆。它编码了"在当前策略分布下，每个 token 对最终结果的贡献"这一动态知识。参考模型 $\pi_{\text{ref}}$ 则是一种冻结的基线记忆，提供初始分布信息。
+这篇文章隐式承认 QA outcome reward 不充分，这正是引入 dense process reward 的动机。论文指出 sparse outcome reward 导致：(1) 鼓励"答案正确但过程错误"的伪解，(2) sample efficiency 低下，(3) credit assignment 困难（§2.1）。然而，PRIME 的解决方案仍然是从 QA outcome 中蒸馏出 dense reward（通过 Implicit PRM），而非引入独立于 QA 的训练信号。对于 memory 场景中"长期价值、偏好维护"等需求，PRIME 的 token-level reward 仍然太短视——它只关注单次 rollout 内的步骤质量，无法跨 episode 评估 memory 的长期效用。
 
-### RQ2: How memory evolves, operates?
+### Q2: QA benchmark 是否是 memory 的充分评估标准？
 
-隐式 PRM 通过在线学习持续演化——每一轮 RL 迭代中，它在当前策略的 rollout 上使用结果标签（CE loss）进行更新。这使其始终与策略分布保持同步，避免了离线 PRM 因分布偏移导致的精度下降。实验表明，在线更新的 PRM 分类精度从约 50% 持续上升至约 75%，而离线 PRM 从约 70% 降至约 55%。
+本文未直接涉及此问题。不过，§5.4 中 value model vs. reward model 的对比实验间接表明，相同的 QA 准确率背后可能隐藏着截然不同的内部机制质量，这其实暗示了 QA benchmark 的粒度不足以区分不同训练范式的深层差异。
 
-### RQ3: Which component is optimized? Which signal is used?
+### Q3: 能否构造非 QA 驱动的 memory 训练数据与信号？
 
-**本文立场：** 两个组件被同时优化：
-
-1. 策略模型 $\pi$：使用 PPO clip loss 优化，信号来自过程奖励 + 结果奖励的组合优势函数
-2. 隐式 PRM $\pi_R$：使用 CE loss 优化，信号为结果级标签 $r_o$
-
-关键发现：SFT 模型直接初始化 PRM 优于专门训练的 PRM，PRIME 适用于 REINFORCE、GRPO、PPO、RLOO 等多种 RL 算法。
-
-### RQ4: Regarding online optimization
-
-在线优化是 PRIME 的核心设计原则。论文明确论证了：
-
-- 在线 PRM 更新有效防止了奖励黑客（reward hacking）
-- 仅需结果级标签即可在线更新（无需步骤级标注），计算开销与传统 ORM 相当
-- 每步训练时间比 RLOO 多 24%，但总体训练效率提升约 2 倍
-- "Zero" 实验表明可直接从基座模型开始 RL，跳过 SFT
+本文未直接涉及此问题，但我认为：
+(1) Implicit PRM 的公式 $r_\phi(y_t) = \beta \log \frac{\pi_\phi(y_t \mid y_{< t})}{\pi_{\text{ref}}(y_t \mid y_{< t})}$ 可以被重新解读为一种 information gain 度量，天然适合作为 intrinsic reward；
+(2) PRM 的在线更新机制可以用任意 reward 信号替代 QA outcome；
+(3) process reward 与 outcome reward 的分离计算框架使得混合多种 reward 信号成为可能。
 
 ---
 
 ## Conclusion
 
-这篇文章提出了一种在大语言模型的 RL 训练中引入密集过程奖励的可扩展方法。其核心思路是利用隐式过程奖励建模，通过策略模型与参考模型的 token 级对数概率比来推导密集奖励，只需结果级标签即可训练，从而实现了 PRM 的在线更新。这解决了传统 PRM 需要昂贵的步骤级标注、无法在线扩展、以及需要独立训练阶段这三大挑战。从 memory 的视角看，隐式 PRM 是一种随策略同步演化的参数化评估记忆，其在线更新机制是防止奖励退化的关键。
+这篇文章提出了一种将隐式过程奖励（Implicit Process Reward）融入在线强化学习的框架，解决了传统 PRM 在 RL 中面临的三大难题：过程标注成本高、在线更新不可扩展、以及额外的 reward model 训练开销。其核心思路是利用隐式过程奖励建模，通过策略模型与参考模型的 token 级对数概率比来推导密集奖励，只需结果级标签即可训练，从而实现了 PRM 的在线更新。这解决了传统 PRM 需要昂贵的步骤级标注、无法在线扩展、以及需要独立训练阶段这三大挑战。从 memory 的视角看，隐式 PRM 是一种随策略同步演化的参数化评估记忆，其在线更新机制是防止奖励退化的关键。

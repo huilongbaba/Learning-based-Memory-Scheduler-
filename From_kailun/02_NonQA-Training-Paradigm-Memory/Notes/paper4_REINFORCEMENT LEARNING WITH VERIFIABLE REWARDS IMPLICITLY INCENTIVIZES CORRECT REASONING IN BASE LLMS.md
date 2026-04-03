@@ -1,150 +1,106 @@
 # Reinforcement Learning with Verifiable Rewards Implicitly Incentivizes Correct Reasoning in Base LLMs
 
-**Source:** [arXiv:2506.14245v2](https://arxiv.org/abs/2506.14245) (Preprint, arXiv cs.AI, October 2025)
+**Source:** [arXiv:2506.14245v2](https://arxiv.org/abs/2506.14245) (2025-06, revised 2025-10)
 
 ---
 
 ## 符号映射表
 
-|论文原始符号|框架符号|说明|
-|---|---|---|
-|$q$|$q$|question prompt，一致|
-|$c_i$ (CoT in response $y_i$)|$t$|推理链/思维轨迹 (thought / reasoning trace)|
-|$a_i$ (final answer in $y_i$)|$A_n$|最终答案|
-|$y_i = (c_i, a_i)$|$(t, A_n)$|一条完整响应 = 推理轨迹 + 最终答案|
-|$\pi_\theta$|$\pi$|模型策略 (policy)，由参数 $\theta$ 决定|
-|$\theta$|$\theta$|模型参数，一致|
-|$G$ responses $Y = {y_1, \dots, y_G}$|${T_1, \dots, T_G}$|一组采样轨迹 (trajectories)|
-|$R(y_i) = \mathcal{I}_{\text{Ans}}(a_i)$|—|可验证奖励，基于答案正确性的二值奖励|
-|$\hat{A}(y_i)$|—|GRPO 优势函数 (advantage)，本框架未预定义|
-|$p_c^\theta$|—|生成正确 CoT 的概率，本文核心分析对象|
-|$\alpha$|—|$P(A_n \text{ correct} \mid t \text{ correct})$，正确推理导致正确答案的概率|
-|$\beta$|—|$P(A_n \text{ correct} \mid t \text{ incorrect})$，错误推理碰巧正确答案的概率|
+| 论文原始符号         | 框架符号                 | 说明                                                                                 |
+| -------------- | -------------------- | ---------------------------------------------------------------------------------- |
+| $q$            | $q$                  | question / prompt                                                                  |
+| $\pi_\theta$   | $\pi$                | 模型策略，参数为 $\theta$                                                                  |
+| $\theta$       | $\theta$             | 模型参数                                                                               |
+| $y_i$          | $T$ (trajectory)     | 第 $i$ 条采样响应（包含 CoT + answer）                                                       |
+| $c_i$          | $t$ (thought)        | 响应 $y_i$ 中的 CoT 推理链                                                                |
+| $a_i$          | $A_n$ (final answer) | 响应 $y_i$ 中的最终答案                                                                    |
+| $R(y_i)$       | —                    | 基于答案正确性的二元奖励                                                                       |
+| $\hat{A}(y_i)$ | —                    | GRPO 标准化优势值                                                                        |
+| $G$            | —                    | 每个 prompt 的采样组大小                                                                   |
+| $p_c^\theta$   | —                    | 当前策略生成正确 CoT 的概率                                                                   |
+| $\alpha$       | —                    | 正确 CoT 产生正确答案的条件概率：$P(\mathcal{I}_{\text{Ans}}=1 \mid \mathcal{I}_{\text{CoT}}=1)$ |
+| $\beta$        | —                    | 错误 CoT 产生正确答案的条件概率：$P(\mathcal{I}_{\text{Ans}}=1 \mid \mathcal{I}_{\text{CoT}}=0)$ |
 
-**新概念说明：**
+**新概念：**
 
-- 本文核心分析围绕 CoT 正确性（$\mathcal{I}_{\text{CoT}}$）与答案正确性（$\mathcal{I}_{\text{Ans}}$）的解耦展开，这不涉及传统意义上的外部 memory 组件（$m_s$ 或 $m_l$），而是分析 RL 训练如何隐式地改变模型内部的推理路径分布。
-- CoT-Pass@K：论文提出的新评估指标，要求最终答案与中间推理步骤同时正确才计为通过。
-
----
-
-## 1. Problem Setting
-
-**论文要解决的问题：** RLVR（使用可验证奖励的强化学习）是否真正提升了 LLM 的推理能力，还是仅仅提高了采样效率？此前 Yue et al. (2025) 提出假说——所有正确推理路径已存在于基座模型中，RLVR 只是调整采样概率并以牺牲推理容量为代价。本文系统性地反驳该假说，论证 RLVR 能隐式激励正确推理。
-
-**输入/输出形式化定义：**
-
-- **输入：** 问题 $q$（数学题或编程题）
-- **模型输出：** 响应 $y_i = (t_i, A_{n,i})$，其中 $t_i$ 为推理轨迹（CoT），$A_{n,i}$ 为最终答案
-- **奖励：** $R(y_i) = \mathcal{I}_{\text{Ans}}(A_{n,i}) \in {0, 1}$，仅基于答案正确性，由确定性验证器给出
-
-**任务类型与数据集：**
-
-- 数学推理：AIME 2024/2025, MATH-500, AMC23, Minerva
-- 代码推理：LiveCodeBench v1–v6
-- 基座模型：Qwen2.5-32B → DAPO-Qwen-32B（RLVR 后）；DeepSeek-R1-Distill-Qwen-7B → AceReason-Nemotron-7B / Skywork-OR1-7B
-
->这篇文章不涉及外部 memory（$m_s$, $m_l$）的使用，其核心贡献在于理论解释 RLVR 如何通过 answer-only reward 隐式优化推理路径质量，这可视为对模型"内部推理记忆"（implicit reasoning memory encoded in $\theta$）的优化过程。
+- **CoT-Pass@K**：论文提出的新评估指标，要求答案和推理过程均正确才算通过。可记为 $\text{CoT-Pass@K}$，本质是对 $t$（thought）与 $A_n$（final answer）做联合正确性验证。
+- **Logic Prior assumption**：预训练 LLM 已建立的知识与逻辑先验，使得正确 CoT 比错误 CoT 更有可能导向正确答案（即 $\alpha > \beta$）。可记为 $\mathcal{P}_{\text{logic}}$。
 
 ---
 
-## 2. Training Procedure
+### A. QA 依赖度分析
 
-**训练流程形式化描述：**
+本文的 reward **100% 来自 QA 结果**。具体而言，reward 定义为：
 
-本文采用 GRPO（Group Relative Policy Optimization）算法，训练流程如下：
+$$R(y_i) = \mathcal{I}_{\text{Ans}}(a_i) \in \lbrace 0, 1 \rbrace$$
 
-1. 对每个问题 $q$，从策略 $\pi_\theta$ 中采样 $G$ 条响应 $Y = {y_1, \dots, y_G}$
-2. 对每条响应计算可验证奖励 $R(y_i) = \mathcal{I}_{\text{Ans}}(A_{n,i})$
-3. 计算组内归一化优势：
+即完全由最终答案是否匹配 ground truth 决定。GRPO 优势通过组内标准化计算：
 
 $$\hat{A}(y_i) = \frac{R(y_i) - \mu_Y}{\sigma_Y}$$
 
-其中 $\mu_Y = \frac{1}{G}\sum_{j=1}^{G} R(y_j)$，$\sigma_Y = \sqrt{\frac{1}{G}\sum_{j=1}^{G}(R(y_j) - \mu_Y)^2}$
+去掉 QA 问题后，训练流程**完全崩溃**——没有 ground truth 就无法计算 $R(y_i)$，也无法得到有效梯度。
 
-4. 策略梯度更新：
+然而，论文的核心理论贡献恰恰揭示了一个**隐含的非 QA 奖励成分**：Theorem 1 证明在 Logic Prior 假设下，GRPO 的梯度会**隐式地**对正确 CoT 赋予正优势、对错误 CoT 赋予负优势，即使 reward 仅基于答案正确性。这意味着 answer-correctness reward 中**蕴含了对推理过程质量的隐式激励信号**，条件是预训练已经建立了足够强的 $\alpha - \beta$ gap。
 
-$$\nabla_\theta J(\theta) \approx \frac{1}{G}\sum_{i=1}^{G} \hat{A}(y_i) \nabla_\theta \log \pi_\theta(y_i \mid q)$$
-
-**Memory 如何参与训练：**
-
-本文不使用显式的外部 memory。但从 memory 视角来看，RLVR 的作用可以理解为：通过策略梯度优化 $\theta$，隐式地重塑了模型参数中编码的推理模式分布——增强正确推理路径的概率，抑制错误推理和猜测路径。这等价于对模型"参数化记忆"的重新组织。
-
-**核心理论（Theorem 1, §4）：**
-
-在 **Logic Prior 假设** 下（$\alpha > \beta$，即正确 CoT 比错误 CoT 更可能产生正确答案），GRPO 满足：
-
-$$E[\hat{A}(y_i) \mid t_i \text{ correct}] \to \frac{(1 - p_c)(\alpha - \beta)}{\sigma} > 0$$
-
-$$E[\hat{A}(y_i) \mid t_i \text{ incorrect}] \to \frac{-p_c(\alpha - \beta)}{\sigma} < 0$$
-
-其中 $p_c = P_{\pi_\theta}(\mathcal{I}_{\text{CoT}}(t) = 1)$。因此，即使奖励仅基于答案正确性，正确 CoT 获得正优势、错误 CoT 获得负优势，$p_c$ 单调递增。
-
-> Logic Prior 假设（$\alpha > \beta$）是定理成立的关键前提。作者也讨论了该假设失败的情况（§4 Discussions on failure modes）：当基座模型保留了预训练中的错误知识偏差时，可能导致错误 CoT 被意外强化，这可能是 R1-Zero 出现可读性差、语言混合等问题的根因。
+> 这里的"隐式激励"本质上依赖预训练建立的 Logic Prior（$\alpha > \beta$）。如果预训练质量不足导致 $\alpha \leq \beta$，则 GRPO 可能反向强化错误 CoT。论文自身也承认这是 R1-Zero 可读性差和语言混合问题的根源。
 
 ---
 
-## 3. Reward Signal
+### B. Memory 价值盲区
 
-**奖励信号：**
+- **能否激励存储"当前无对应问题、未来可能有用"的信息？** 不能。RLVR 的训练循环是：给定 $q$ → 采样 $G$ 条响应 → 用 answer correctness 打分 → 更新 $\pi_\theta$。每一轮梯度更新都绑定于具体的 $(q, \text{ground truth})$ 对。不存在任何机制鼓励模型存储"暂时无用但未来可能有用"的信息。
+    
+- **Delete/Update 是否由 QA 表现驱动？** 本文不涉及显式的 memory operation（无 store/retrieve/delete/update 操作）。模型的"记忆"完全体现在参数 $\theta$ 的隐式变化中，而这种变化 100% 由 QA reward 驱动。
+    
+- **是否区分不同类型的记忆价值？** 未区分。论文只区分了 CoT 正确性（$\mathcal{I}_{\text{CoT}}$）和答案正确性（$\mathcal{I}_{\text{Ans}}$），不涉及 informational / procedural / contextual 等记忆类型的分类。
+    
 
-- 二值可验证奖励：$R(y_i) = \mathcal{I}_{\text{Ans}}(A_{n,i}) \in {0, 1}$
-- 数学题：提取答案 token 与 ground truth 比对
-- 代码题：实际执行生成代码并验证输出正确性
-
-**奖励如何与 memory 交互：**
-
-奖励不直接操作任何 memory 组件。其作用机制完全通过策略梯度间接实现：正确答案的奖励信号经 GRPO 优势归一化后，统计上倾向于强化具有正确推理轨迹 $t$ 的响应、抑制错误推理的响应。这一隐式激励机制是本文的核心理论贡献。
-
-**CoT 质量验证（§6）：**
-
-论文进一步通过 SFT 实验验证了 RLVR 后 CoT 的质量提升：在 DAPO 训练问题上，用不同阶段模型生成的 CoT 数据对基座模型做 SFT，发现后期 CoT 数据训练出的模型泛化性能更好，甚至能用 SFT 近似复制 RLVR 模型的 Pass@1 性能。
-
-> 仅使用 answer-level reward 而非 process reward（如 PRM）就能隐式提升 CoT 质量，这一发现对 reward 设计有重要启示，即过程奖励可能不是必需的，但前提是基座模型已具备足够的"逻辑先验"。
+> 本文的 memory 完全是参数化的隐式记忆（$\theta$ 的变化），没有任何外部记忆 $m_l$ 或工作记忆 $m_s$ 的显式操作。从 Non-QA Memory 视角看，RLVR 框架中模型学到的推理模式可视为一种 procedural memory 的隐式改进，但论文未从这个角度分析。
 
 ---
 
-## 4. Inference Procedure
+### C. QA 评估的局限性
 
-**推理时的流程：**
+- **是否有非 QA 指标？** 有。论文提出了 **CoT-Pass@K**，这是对标准 Pass@K 的显著改进。CoT-Pass@K 要求 CoT 推理过程和最终答案同时正确才计为通过，使用 LLM-as-a-CoT-Judge（DeepSeek-R1-0528-Qwen3-8B）进行 CoT 正确性验证。此外还引入了 $P(CC \mid CA)^{(q)}$（正确答案中包含正确 CoT 的比例）作为训练过程中的诊断指标。这些虽然超越了纯 answer-correctness 评估，但**本质上仍服务于 QA 任务**——评估的是"能否正确推理出答案"，而非记忆的独立价值。
+    
+- **如果构造"关键信息存在但从不被提问"的测试？** 该方法无法应对此类测试。RLVR 的优化目标完全是提高 answer pass rate，不会激励模型保留未被查询的信息。
+    
+- **消融实验是否揭示了 QA 指标无法捕捉的现象？** 是的，论文的核心发现之一就是：**Pass@K 指标无法区分"正确推理得到答案"和"碰巧猜对答案"**。在 AIME 等难题上，base LLM 的 Pass@K 可以追上甚至超过 RLVR 模型，但 CoT-Pass@K 揭示了持续存在的显著差距。此外，Figure 4 显示即使 $P(CA)^{(q)}$ 接近 1.0，$P(CC \mid CA)^{(q)}$ 的中位数仍然只有约 0.7，说明 answer-correctness reward 无法完全消除错误推理。
+    
 
-推理阶段无特殊 memory 读/写操作。模型直接从优化后的策略 $\pi_\theta$ 中采样响应 $y = (t, A_n)$。
-
-**评估创新——CoT-Pass@K：**
-
-论文提出 CoT-Pass@K 指标，在采样 $K$ 条响应时，仅当某条响应的 CoT $t$ 和答案 $A_n$ 同时正确时才计为通过。实践中使用 DeepSeek-R1-0528-Qwen3-8B 作为 CoT 验证器，对每条 CoT 进行 3 次独立验证，采用 any-correct / all-correct / majority-correct 三种聚合策略以控制 false positive 和 false negative。
-
-**与训练阶段的差异：**
-
-- 训练时：仅使用 answer-level reward（$\mathcal{I}_{\text{Ans}}$）
-- 评估时：额外引入 CoT-level 验证（$\mathcal{I}_{\text{CoT}}$），但该验证不参与训练
-
-> CoT-Pass@K 的引入揭示了 Pass@K 在数学推理评估中的不可靠性，基座模型可能通过错误推理碰巧猜中简单格式的答案（如整数），导致 Pass@K 虚高。我认为这一指标设计思路同样值得在其他推理评估场景中推广。
+> CoT-Pass@K 的提出本身就是对"QA 评估局限性"的有力证据。但它依赖 LLM verifier（DeepSeek-R1-0528-Qwen3-8B），而该 verifier 本身的可靠性有限（论文承认存在 false positive/negative），这构成了一个递归的验证问题。
 
 ---
 
-## 5. RQ 分析
+### D. 非 QA 范式的可能性
 
-### RQ1: What is memory?
+- **可脱离 QA 独立评估的组件？** CoT-Pass@K 和 $P(CC \mid CA)$ 可以部分脱离 answer correctness 独立评估推理质量。特别是 LLM-as-a-CoT-Judge 范式可以独立判断 CoT 的逻辑正确性，不依赖最终答案。此外，Section 6 用 SFT 泛化性能作为 CoT 质量的代理指标，也是一种间接的非 QA 评估方式。
+    
+- **框架能否接入非 QA reward？** 理论上可以。Theorem 1 的核心只要求 reward 能区分"好"和"坏"的响应。如果将 $R(y_i)$ 替换为基于 CoT 过程质量的 reward（如 process reward model），框架在数学上仍然成立。论文在 Discussion 中提到了 process reward modeling (Lightman et al., 2024; Uesato et al., 2022; Wang et al., 2024) 作为可能的方向。但论文本身**未实验任何非 QA reward**。
+    
+- **Memory operation 设计是否暗示内在质量标准？** 不存在显式的 memory operation。但 Logic Prior 假设（$\alpha > \beta$）暗示了一个内在质量标准：预训练建立的知识和逻辑先验本身就是一种"好推理"的内在度量。GRPO 利用这个先验将 answer-correctness 信号分解为对 CoT 质量的隐式反馈。
+    
 
-这篇文章未引入显示memory组件，但可将模型参数 $\theta$ 视为隐式的参数化记忆。RLVR 通过优化 $\theta$ 来重塑模型内部存储的推理模式分布，增强正确推理路径、抑制错误推理和猜测行为。
-
-### RQ2: How memory evolves, operates?
-
-$\theta$ 的演化由 GRPO 策略梯度驱动：正确 CoT 获得正优势被强化，错误 CoT 获得负优势被抑制，$p_c$（生成正确 CoT 的概率）单调递增。训练动态分析显示 $P(CC|CA)^{(q)}$（正确答案中正确 CoT 的比例）从训练初期即开始提升，且该能力可泛化至未见过的测试问题。
-
-### RQ3: Which component is optimized? Which signal is used?
-
-- 优化组件： 模型参数 $\theta$（即策略 $\pi_\theta$）
-- 优化信号： answer-level 二值可验证奖励 $R(y_i) = \mathcal{I}_{\text{Ans}}(A_{n,i})$，经 GRPO 组内归一化后作为优势函数
-- 核心发现： 尽管训练信号仅涉及答案正确性，但在 Logic Prior 假设下，GRPO 梯度会隐式激励正确推理路径
-
-### RQ4: Regarding online optimization
-
-本文的 RLVR 训练本质上就是在线优化：每一轮从当前策略 $\pi_\theta$ 中采样新的响应，计算奖励和优势，再更新策略。论文复现了 DAPO 的训练过程，观察到大多数训练问题在约 400 步后 $P(CA)^{(q)} \to 1$，但仍有约 30% 的正确答案伴随着有缺陷的 CoT（$P(CC|CA)$ 中位数约 0.7），揭示了纯 answer reward 在线优化的局限性。
+> 论文展望中提到的 "new algorithmic paradigms" 和 "directly incentivize correct reasoning paths" 实际上指向了 process reward 或 intrinsic reward 的方向，但作者选择留在 outcome-based reward 的框架内。这为 Non-QA reward 的研究留下了明确的开放空间。
 
 ---
 
-## Conclusion
+### 5. RQ 分析
 
-本文系统性地回应了"RLVR 是否真正提升 LLM 推理能力"这一争议。作者首先通过引入 CoT-Pass@K 指标（同时验证答案和推理过程的正确性），在数学和代码任务上发现 RLVR 确实扩展了推理能力边界，而非仅仅提升采样效率。在理论层面，作者证明了在"逻辑先验"假设（正确推理更可能导致正确答案）下，GRPO 的策略梯度会自动赋予正确 CoT 正优势、错误 CoT 负优势，从而隐式激励正确推理——即使奖励信号仅基于最终答案。训练动态实验进一步证实，这种正确推理的激励从训练早期即开始，且能泛化到测试集。最后，通过 SFT 实验验证了 RLVR 后生成的 CoT 质量显著提升，甚至可以用 SFT 近似复现 RLVR 模型的性能。
+**Q1: QA reward 是否是 memory 的充分训练信号？**
+
+论文的立场是：QA reward 对推理训练是有效的（在 Logic Prior 成立时），但不是充分的。Theorem 1 证明 answer-correctness reward 可以隐式激励正确推理，但 Figure 4 揭示了明确的局限：即使训练问题的 $P(CA)^{(q)}$ 接近 1.0，仍有约 30% 的正确答案伴随错误 CoT。论文明确承认 "we may not have a chance to mitigate them purely based on answer correctness as the reward"。从 credit assignment 角度看，answer → CoT 的信号路径确实很长，论文通过 $\alpha - \beta$ gap 的存在性来缓解这一问题，但未讨论该 gap 在更复杂任务中是否足够。
+
+**Q2: QA benchmark 是否是 memory 的充分评估标准？**
+
+我认为论文隐式否定了这一点。CoT-Pass@K 的提出直接表明标准 QA 指标（Pass@K）不够充分，它无法区分"真正理解"和"碰巧猜对"。论文发现在 AIME 难题上，base LLM 可以通过多次采样"猜对"答案，使得 Pass@K 虚高。但论文的替代方案（CoT-Pass@K）仍然在 QA 框架内——它评估的是"推理 + 回答是否正确"，而非"是否记住了应该记的信息"。对于"该记但没被问"的评估能力，本文无任何贡献。
+
+**Q3: 能否构造非 QA 驱动的 memory 训练数据与信号？**
+
+本文未直接涉及此问题。 论文的全部训练数据和信号均为 QA 驱动（17k 数学问题 + answer correctness reward）。但论文在 Discussion (A.7) 中提供了间接相关的展望：呼吁 process reward modeling、新的 RLVR 算法、以及"更直接激励正确推理路径"的方法。这些方向与 intrinsic reward（如 information gain, counterfactual contribution）在精神上是一致的，但论文未具体讨论这些概念。Section 6 的 SFT 实验也暗示了一种可能性：用 RLVR 产生的高质量 CoT 数据作为非 RL 的训练信号，但这仍然依赖 QA 作为上游数据生成的驱动。
+
+---
+
+### Conclusion
+
+这篇文章系统性地回应了"RLVR 是否真正提升了 LLM 推理能力"的争论。作者首先通过引入 CoT-Pass@K 指标（同时检验答案和推理过程的正确性），揭示了此前 Pass@K 实验中被忽略的"幸运猜中"现象，并在数学和代码两个领域展示了 RLVR 训练后推理能力边界的实质性扩展。在理论层面，作者证明了在"Logic Prior"假设（正确 CoT 比错误 CoT 更可能导向正确答案）下，GRPO 算法会隐式地给正确推理赋予正优势、给错误推理赋予负优势，从而即使 reward 仅基于答案正确性，也能逐步提升 CoT 的质量。训练动态分析和 SFT 复制实验进一步验证了这一结论：RLVR 从训练早期就开始改善推理质量，且其产生的 CoT 数据质量远高于 base LLM 的 CoT，甚至可以通过简单的 SFT 复制出接近 RLVR 模型的性能。

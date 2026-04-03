@@ -1,147 +1,110 @@
 # Spurious Rewards: Rethinking Training Signals in RLVR
 
-**Source:** [arXiv:2506.10947v2](https://arxiv.org/abs/2506.10947) [cs.AI], Preprint, February 26, 2026
+**Source:** [arXiv:2506.10947v2](https://arxiv.org/abs/2506.10947) (February 26, 2026)
 
 ---
 
 ## 符号映射表
 
-|论文原始符号|框架符号|含义|
+|论文符号|框架符号|说明|
 |---|---|---|
-|$x$|$q$|输入问题 / prompt|
-|$y$|$T$|模型生成的 rollout（轨迹）|
-|$y_t$|—|轨迹中第 $t$ 个 token（框架未细化到 token 级别）|
-|$\pi_\theta$|$\pi$|当前策略（模型）|
-|$\pi_\text{old}$|—|行为策略（上一步的策略），新增符号 $\pi_\text{old}$|
-|$\pi_\text{ref}$|—|冻结的参考策略，新增符号 $\pi_\text{ref}$|
+|$x$|$q$|输入 prompt / question|
+|$y$|$T$|模型生成的 rollout（trajectory）|
+|$y_t$|—|trajectory 中第 $t$ 个 token|
+|$\pi_{\theta}$|$\pi$|当前策略|
+|$\pi_{\text{old}}$|—|行为策略（上一步的策略），框架未显式区分|
+|$\pi_{\text{ref}}$|—|冻结参考策略，框架未覆盖，建议新符号 $\pi_{\text{ref}}$|
 |$\theta$|$\theta$|模型参数（一致）|
-|$r(x, y)$|—|奖励函数，框架未定义奖励符号，沿用 $r$|
-|$\hat{A}(x, y)$|—|组内归一化优势函数，新增符号 $\hat{A}$|
-|$\rho_t(y; \theta)$|—|token 级重要性比率 $\pi_\theta(y_t \mid x, y_{<t}) / \pi_\text{old}(y_t \mid x, y_{<t})$，新增|
-|$\epsilon_c$|—|PPO 风格 clipping 阈值，新增|
-|$G$|—|每个 prompt 的 rollout 数量（组大小）|
-|$\gamma$|—|随机奖励的 Bernoulli 概率参数|
+|$r(x, y)$|—|reward 函数，框架中未显式定义，建议 $r(q, T)$|
+|$\hat{A}(x, y)$|—|group-relative advantage，框架未覆盖，建议 $\hat{A}(q, T)$|
+|$\rho_t(y; \theta)$|—|token 级 importance ratio $\pi_\theta(y_t \mid x, y_{< t}) / \pi_{\text{old}}(y_t \mid x, y_{< t})$，框架未覆盖|
+|$\epsilon_c$|—|PPO 风格的 clipping 阈值，框架未覆盖|
+|$G$|—|每个 prompt 的 rollout 数量，框架未覆盖|
+|$\gamma$|—|随机奖励的 Bernoulli 概率参数，框架未覆盖|
 
-> 本文核心关注 RL 训练信号本身，而非 memory 系统。本文的核心贡献在于揭示 GRPO 的 clipping 机制如何放大预训练先验行为（可视为一种隐式的 $m_l$），而非显式的 memory 读写。
-
----
-
-## 1. Problem Setting
-
-**要解决的问题：** 本文研究 RLVR（reinforcement learning with verifiable rewards）中训练信号（奖励函数）的真正作用机制。具体而言，作者发现即使使用完全虚假的奖励信号（随机奖励、错误标签奖励），某些模型（尤其是 Qwen2.5-Math）仍能获得显著的数学推理性能提升，而其他模型家族（Llama3、OLMo2）则无法从中受益。
-
-**形式化定义：**
-
-- **输入：** 问题 $q$（数学推理题）
-- **输出：** 最终答案 $A_n$（包含推理轨迹 $T$ 的完整生成序列）
-- **策略：** $\pi(T \mid q)$，即给定问题 $q$ 时模型生成轨迹 $T$ 的概率
-
-**任务类型与数据集：**
-
-- 任务类型：数学推理（pass@1 / average@8 评估）
-- 训练数据：DeepScaleR（Luo et al., 2025）
-- 评估基准：MATH-500、AMC、AIME 2024/2025
-- 模型：Qwen2.5-Math-7B/1.5B、Qwen2.5-7B/1.5B、Llama3.1-8B(-Instruct)、Llama3.2-3B(-Instruct)、OLMo2-7B(-SFT)
-
-> 本文的独特价值在于系统性地挑战了"RLVR 的性能提升来自奖励信号本身"这一假设，通过消融实验揭示了优化算法（GRPO clipping）与预训练先验之间的交互作用。
+**注意：** 本文不涉及 memory 系统（$m_s$, $m_l$, $v$, $R$ 等均未出现）。论文聚焦于 RLVR 训练信号本身的性质，而非 memory 操作。
 
 ---
 
-## 2. Training Procedure
+### A. QA 依赖度分析
 
-**训练流程：** 使用 GRPO（Group Relative Policy Optimization）进行在线 RL 训练。对每个问题 $q$，采样 $G=16$ 个 rollout ${T^{(1)}, \dots, T^{(G)}}$，计算组内归一化优势，然后通过 clipped surrogate objective 更新 $\theta$。
+本文的 reward 设计覆盖了从标准 ground-truth 到完全无信息的 random reward 的光谱。标准设置中，reward 是严格的 QA 结果：$r(q, T) = \mathbb{1}(\hat{y} = y^*)$，即 100% 来自 QA。然而论文的核心发现是：**即使将 reward 替换为与正确答案无关（random）甚至负相关（incorrect label）的信号，Qwen2.5-Math 模型仍然能获得显著的性能提升**（random reward 在 MATH-500 上提升 21.4%，接近 ground-truth 的 29.1%）。
 
-**核心公式（GRPO 目标函数）：**
+去掉 QA 问题后，训练流程并不崩溃——至少对 Qwen 系列模型而言。这说明 RLVR 的真正训练信号可能部分来自 **GRPO 优化算法本身的 clipping bias**，而非 reward 的语义内容。具体而言，clipping 机制会系统性地放大模型预训练阶段已有的高概率行为（如 code reasoning），即使 reward 完全随机。
 
-$$J(\theta) = \mathbb{E}_{q \sim D,; T \sim \pi_\text{old}(\cdot|q)} \left[ \sum_{t=1}^{|T|} \min\left( \rho_t(T;\theta),\hat{A}(q,T),; \text{clip}\left(\rho_t(T;\theta),, 1-\epsilon_c,, 1+\epsilon_c\right) \hat{A}(q,T) \right) \right]$$
+隐含的非 QA 奖励成分包括：format reward（只要输出包含 `\boxed{}` 即给正奖励）和 Python reward（只要输出包含 `python` 字符串即给正奖励），这些都是纯格式/行为层面的信号，与答案正确性无关。
 
-其中：
-
-- $\rho_t(T;\theta) = \frac{\pi_\theta(y_t \mid q, y_{<t})}{\pi_\text{old}(y_t \mid q, y_{<t})}$（token 级重要性比率）
-- $\hat{A}(q, T) = \frac{r(q, T) - \bar{r}_q}{\sigma_q}$（组内归一化优势函数）
-- $\epsilon_c = 0.2$（clipping 阈值）
-- KL 正则化系数 $\lambda = 0$（实验中禁用）
-
-**Memory 如何参与训练：** 本文不涉及显式 memory 系统。但作者发现 GRPO 的 clipping 机制实际上充当了一种**隐式的预训练记忆放大器**：它系统性地增强已经具有高先验概率的 token（即预训练中学到的模式 $m_l$），同时抑制低概率 token。这种效应在没有信息性奖励的情况下依然存在。
-
-**Clipping 偏差的梯度形式（§4, Eq.2）：**
-
-$$\mathbb{E}[\nabla_\theta J(\theta)] \propto \mathbb{E}_{q, T} \begin{cases} \nabla_\theta \log \pi_{\theta,q}(y_t), & \text{if } R_\theta < 1-\epsilon_c \ 0, & \text{if } |R_\theta - 1| \leq \epsilon_c \ -\nabla_\theta \log \pi_{\theta,q}(y_t), & \text{if } R_\theta > 1+\epsilon_c \end{cases}$$
-
-其中 $R_\theta = \pi_{\theta,q}(y_t) / \pi_{\text{old},q}(y_t)$。该公式表明：**即使奖励完全随机，clipping 也会产生非零的期望梯度——方向由预训练先验决定。**
-
-**训练配置（§A.3）：** 8 GPU，学习率 5e-7，mini-batch size 128，rollout batch size 64，每 prompt 16 rollouts，温度 $\tau=1$，训练 300 步。
-
-> RL 后训练主要放大预训练中已学到的行为，而非学习新能力。这篇文章表示，即使奖励为纯噪声，只要 clipping 机制存在，这种放大效应就会发生。
+> Spurious reward 的有效性高度依赖模型，在 Llama3 和 OLMo2 上，spurious reward 几乎无效甚至有害，说明 pretraining prior 才是决定因素。
 
 ---
 
-## 3. Reward Signal
+### B. Memory 价值盲区
 
-**奖励信号的层级设计（§2.2）：**
+本文**不涉及 memory 系统**，因此以下分析是间接推断：
 
-|类别|奖励名称|定义|MATH-500 提升 (Qwen2.5-Math-7B)|
-|---|---|---|---|
-|标准|Ground Truth|$r=1$ 当且仅当答案正确|+29.1%|
-|弱|Majority Vote|用 64 rollouts 的多数投票伪标签替代真实标签|+27.1%|
-|弱|Format|$r=1$ 当且仅当回答包含非空 `\boxed{}`|+13.8%|
-|虚假|Random|$r \sim \text{Bernoulli}(\gamma)$，独立于回答内容|+21.4%|
-|虚假|Incorrect|用多数投票中**错误**的标签作为奖励标准|+24.1%|
+- **能否激励存储"当前无对应问题、未来可能有用"的信息？** 不适用。本文没有 memory 操作。但论文揭示的核心现象——RLVR 主要放大预训练中已有的行为模式——暗示：如果将此机制迁移到 memory 场景，RL 训练很可能只会强化"已经在预训练中学到的记忆模式"，而无法激励模型发现新的记忆策略。
+    
+- **Delete/Update 是否由 QA 表现驱动？** 不适用。
+    
+- **是否区分不同类型的记忆价值？** 不适用。但论文对 code reasoning vs. natural language reasoning 的区分提供了一个类比：不同的"推理策略"在预训练中有不同的先验概率，RLVR（尤其是带 clipping 的 GRPO）会选择性放大高先验策略。类似地，不同类型的 memory operation 也可能有不同的先验概率，RL 训练可能只放大"最容易做的记忆操作"而非"最有价值的记忆操作"。
+    
 
-**奖励与 Memory 的交互：** 本文的核心洞察是：奖励信号的信息量远不如预期重要。真正驱动性能提升的是 GRPO clipping 与预训练先验（隐式 $m_l$）的交互。具体表现为：
-
-1. **对 Qwen2.5-Math 模型：** 预训练中学到的 "code reasoning"（在推理中使用 Python 代码但不执行）是一种高概率行为模式。clipping 偏差放大了这种模式（从 65% → 90%+ 频率），而 code reasoning 与正确性强相关（60.9% vs 28.0% 准确率），因此即使奖励无信息量，性能也会提升。
-2. **对非 Qwen 模型：** 这些模型缺乏有效的 code reasoning 先验（No-Code 或 Bad-Code），因此 clipping 偏差无法放大有益行为，虚假奖励无效。
-
-**关键验证实验（§4）：**
-
-- 移除 clipping → 随机奖励失效（3 种不同的 no-clipping 变体均验证）
-- 保留 clipping → 随机奖励持续有效
-- 结论：clipping 是虚假奖励有效的**必要条件**
-
-> 这一发现对 RLVR 研究社区有重要的方法论警示：许多 RLVR 方法仅在 Qwen 模型上验证，可能高估了其训练信号的真实贡献。作者建议使用虚假奖励作为 dummy baseline 来校准实验结果。
+> 虽然本文不直接讨论 memory，但其"RLVR 放大预训练先验而非学习新能力"的结论对 memory RL 研究有深刻警示：如果 memory operation 的价值完全由 QA reward 定义，那么 RL 可能只是在放大预训练中已有的记忆模式，而非真正学会"什么值得记"。
 
 ---
 
-## 4. Inference Procedure
+### C. QA 评估的局限性
 
-**推理设置（§A.4）：**
+论文的评估指标全部是 QA 准确率（MATH-500 pass@1、AMC avg@8、AIME avg@8），没有任何非 QA 指标。
 
-- pass@1：温度 0.0（贪心解码）
-- pass@k / average@8：温度 0.6
+然而，论文的实验本身就是对 QA 评估局限性的有力说明：
 
-**推理时无显式 memory 读写。** 推理时模型直接根据当前参数 $\theta$（已被 RLVR 更新）生成轨迹 $T$。RLVR 的效果体现在参数 $\theta$ 的变化中——具体来说，是高概率推理模式（如 code reasoning）被进一步强化。
+- **Code reasoning frequency** 是论文发现的一个与 QA 准确率高度相关但本质上非 QA 的指标。Qwen2.5-Math-7B 在 RLVR 训练中 code reasoning 频率从 65% 上升到 90%+，这一行为变化无法被 QA 准确率单独捕捉。
+- **如果构造"关键信息存在但从不被提问"的测试：** 本文没有直接做此实验，但论文暗示这类测试会暴露 spurious reward 的本质——模型并没有学到新的推理能力，只是被 clipping bias 推向了预训练中已有的高先验行为。
+- **消融实验揭示了 QA 指标无法捕捉的现象：** 去除 clipping 后，random reward 不再产生 QA 准确率提升（Figure 4），但这并不意味着模型没有变化——只是变化不再系统性地偏向高先验行为。此外，论文发现 AIME2025（模型未见过的题目）上 spurious reward 的增益大幅减少，说明 QA 指标在不同分布上的表现不一致。
 
-**与训练阶段的差异：** 训练时采样多个 rollout 并计算组内优势；推理时为单次生成。训练的效果通过 $\theta$ 的更新永久编码到模型中。
-
-**Code Reasoning 示例（§5, Figure 5）：** Qwen2.5-Math-7B 在推理时会生成 Python 代码并"预测"代码执行结果（实际上是自回归生成，未连接代码解释器），这种模式在 RLVR 后从 65% 增加到 90%+。
-
-> 推理阶段的行为变化本质上是训练阶段 clipping 偏差累积效应的体现。这暗示了一种可能的替代方案：通过 prompt engineering 直接诱导 code reasoning（Table 2 显示 prompting 可带来 +15% 提升），无需 RL 训练。
+> 论文虽然只用 QA 评估，但其核心发现恰恰说明了 QA 指标的欺骗性：在 Qwen 模型上用 random reward 得到的 +21.4% QA 提升，并不代表真正的推理能力提升，而只是预训练行为的放大。这是 QA 评估范式最鲜明的反例之一。
 
 ---
 
-## 5. RQ 分析
+### D. 非 QA 范式的可能性
 
-### RQ1: What is memory?
+- **方法中可脱离 QA 独立评估的组件：** Code reasoning frequency 是一个完全不依赖 QA 的行为指标，论文证明它与 QA 准确率高度相关但可以独立测量。此外，token probability（$\pi_{\theta,x}(y)$ 的均值）和 lexical repetition rate 也是非 QA 指标。
+    
+- **框架能否接入非 QA reward？** 是的，论文已经展示了多种非 QA reward 的可行性：
+    
+    - Format reward：$r = \mathbb{1}(\text{response contains } \backslash\text{boxed}\lbrace\rbrace)$
+    - Python reward：$r = \mathbb{1}(\text{response contains "python"})$
+    - No-repetition reward：$r = \mathbb{1}(\text{no string repeated} > 10 \text{ times})$
+    - Random reward：$r \sim \text{Bernoulli}(\gamma)$
+    
+    这些 reward 无需修改 GRPO 框架即可直接使用。
+    
+- **Memory operation 设计是否暗示了某种内在质量标准？** 不直接适用，但论文揭示的 clipping bias 机制暗示了一个内在标准：**行为与预训练先验的一致性**。GRPO 的 clipping 机制本质上在做"放大高先验行为、抑制低先验行为"，这本身就是一种不依赖外部 reward 的内在质量信号。
+    
 
-本文未涉及显式 memory。但可从隐式 memory 角度理解：预训练阶段学到的推理策略（如 code reasoning）构成了一种隐式长期记忆 $m_l$，编码在模型参数 $\theta$ 中。GRPO clipping 的作用是选择性地放大这些隐式记忆中的高概率模式。不同模型家族拥有不同的隐式 $m_l$ 内容（Qwen-Math 有 code reasoning，Llama/OLMo 没有），这决定了 RLVR 的效果。
-
-### RQ2: How memory evolves, operates?
-
-隐式 $m_l$ 的"演化"通过 GRPO 训练实现。Clipping 偏差使高概率行为（如 code reasoning）的概率进一步增加（Figure 9a 显示 token 概率单调上升），而低概率行为被抑制。这一过程是单调且不可逆的，在虚假奖励下，code reasoning 频率从 65% 快速增至 90%+（15 步内），且不会回落。值得注意的是，ground truth 奖励下 code reasoning 频率先升后降，暗示真实奖励能引导模型探索 code reasoning 之外的改进路径。
-
-### RQ3: Which component is optimized? Which signal is used?
-
-优化的组件是策略 $\pi$（即模型参数 $\theta$）。本文的核心发现是：优化信号的真正来源并非奖励函数 $r$，而是 GRPO clipping 与预训练先验 $\theta_0$ 的交互产生的梯度偏差。在随机奖励下，无 clipping 时期望梯度为零（无学习信号）；有 clipping 时，期望梯度非零且方向由 $\pi_\text{old}$ 的 token 概率分布决定。
-
-### RQ4: Regarding online optimization
-
-本文使用了在线 RL 训练（GRPO 是 on-policy 方法，每步用当前策略采样 rollout 并更新）。但作者发现，在虚假奖励设定下，"在线"的含义被弱化。因为奖励不依赖于生成内容，真正驱动更新的是 clipping 对先验的放大，而非对新行为的在线探索。
+> 论文展示的 format reward、Python reward、no-repetition reward 都是行为层面的非 QA 信号，且在特定模型上有效。这为 memory 领域设计非 QA reward（如 memory utilization rate、retrieval consistency、information coverage）提供了直接的方法论参考。
 
 ---
 
-## Conclusion
+### 5. RQ 分析
+
+**Q1: QA reward 是否是 memory 的充分训练信号？**
+
+这篇文章提供了强有力的反面证据：QA reward 甚至不是 RLVR 数学推理训练的必要信号。在 Qwen2.5-Math 上，random reward（零信息量）和 incorrect reward（负信息量）都能产生接近 ground-truth reward 的性能提升。论文将此归因于 GRPO clipping bias 对预训练先验的系统性放大。这意味着：在特定模型上，QA reward 的"训练信号"可能大部分来自优化算法的偏置而非 reward 本身的语义内容。对 memory 场景而言，这个发现更加令人担忧——如果 QA reward 连"是否在学习 reward 给出的信号"都无法保证，那么通过 QA reward 训练 memory operation 的有效性就更加可疑。
+
+**Q2: QA benchmark 是否是 memory 的充分评估标准？**
+
+论文间接回答了这个问题：QA benchmark 可以被 spurious reward "欺骗"。在 Qwen 模型上，random reward 训练后 MATH-500 准确率提升 21.4%，但这并非真正的能力提升，而是预训练行为（code reasoning）被 clipping bias 放大的结果。论文在 AIME2025（out-of-distribution）上的实验进一步证实了这一点：spurious reward 的增益在 OOD 数据上大幅缩水。这说明 QA benchmark 容易过度估计训练的真实效果，尤其是当模型的预训练数据与评测数据高度重叠时。
+
+**Q3: 能否构造非 QA 驱动的 memory 训练数据与信号？**
+
+这篇文章未直接讨论 memory，但提供了构造非 QA 信号的具体实例：format reward、Python reward、no-repetition reward 都是纯行为层面的信号，不依赖答案正确性。更重要的是，论文揭示了 GRPO clipping 本身就是一种 intrinsic reward，它系统性地偏好高先验行为，无需外部 reward 即可产生训练信号。这为设计 memory 领域的 intrinsic reward 提供了启发：可以考虑基于 memory operation 的先验一致性、信息增益、或反事实贡献来构造非 QA 信号。但论文也警示：这类信号的有效性高度依赖模型的预训练先验，必须在多个模型上验证。
+
+---
+
+### Conclusion
 
 这篇文章通过一组精心设计的实验，揭示了 RLVR 中一个反直觉的现象：对于 Qwen2.5-Math 模型，即使使用完全随机或故意错误的奖励信号，GRPO 训练仍能带来接近真实奖励水平的数学推理性能提升（随机奖励 +21.4% vs 真实奖励 +29.1%）。作者将这一现象追溯到 GRPO 的 clipping 机制，它产生了一种系统性的梯度偏差，会放大模型在预训练中已经学到的高概率行为模式（如 Qwen-Math 的 "code reasoning"）。关键的是，这种效应高度依赖模型——同样的虚假奖励对 Llama3 和 OLMo2 无效甚至有害，因为这些模型缺乏可被放大的有益预训练先验。
 
-因此我认为，优化算法本身（而不仅仅是奖励信号）能够决定哪些内容会被“记住”和强化，截断偏差会系统性地偏向高先验行为，而与奖励质量无关。另外，仅在 Qwen 模型上验证的 RLVR 方法可能高估了其训练信号的真实贡献，未来研究应在多种模型上验证，并使用虚假奖励作为基线校准。
+因此我认为，优化算法本身（而不仅仅是奖励信号）能够决定哪些内容会被“记住”和强化，截断偏差会系统性地偏向高先验行为，而与奖励质量无关。另外，仅在 Qwen 模型上验证的 RLVR 方法可能高估了其训练信号的真实贡献，未来研究应在多种模型上验证，并使用虚假奖励作为基线校准。如果问答奖励甚至无法可靠地表明学习更好的推理，它又如何能表明学习记住什么呢？从答案到记忆操作的积分分配路径甚至比答案到推理策略的路径更长。

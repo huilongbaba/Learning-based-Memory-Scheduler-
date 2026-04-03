@@ -1,6 +1,6 @@
-# Learning to Reason without External Rewards
+# Learning to Reason Without External Rewards
 
-**source:** [arXiv:2505.19590v3](https://arxiv.org/abs/2505.19590) ICLR 2026
+**Source:** [arXiv:2505.19590](https://arxiv.org/abs/2505.19590) (Published as a conference paper at ICLR 2026, arXiv v3: 2 Mar 2026)
 
 ---
 
@@ -8,145 +8,136 @@
 
 |论文原始符号|框架符号|说明|
 |---|---|---|
-|$q$|$q$|输入问题 (input query)|
-|$o$ / $o_i$|$a$|模型生成的输出 (generated output)，对应框架中的 action|
-|$\pi_\theta$|$\pi$|当前策略 (policy)|
-|$\pi_{\text{ref}}$|—|参考策略 (reference policy)，框架未显式覆盖，建议符号 $\pi_{\text{ref}}$|
-|$\pi_{\theta_{\text{old}}}$|—|行为策略 (behavior policy)，即上一轮迭代的策略|
-|$\theta$|$\theta$|模型参数|
-|$u(q, o)$ / $u_i$|—|内在奖励信号 (intrinsic reward)，建议新符号 $r_{\text{int}}$，表示 intrinsic reward|
-|Self-certainty|—|自确信度，基于 $\text{KL}(U \| p_{\pi_\theta})$ 的置信度度量，建议符号 $\text{SC}$|
-|$\hat{A}_{i,t}$|—|优势估计 (advantage estimate)|
-|$G$|—|每个 query 采样的候选输出数量 (group size)|
-|$o_{<i}$|$C$|已生成的 token 序列，构成当前 token 的上下文|
-|$V$|—|词表 (vocabulary)|
-|$T$ (trajectory) 概念隐含于 rollout|$T$|轨迹，论文中体现为对每个 $q$ 采样 $G$ 条完整输出序列|
+|$q$|$q$|input query / question|
+|$o$ (output)|论文中 $o$ 同时承担框架中 $t$（reasoning trace）和 $A_n$（final answer）的角色，因为 INTUITOR 不区分推理过程与最终答案||
+|$o_{< i}$|可视为 $m_s$（working memory）的序列展开形式：生成第 $i$ 个 token 时，前 $i-1$ 个 token 构成当前工作记忆||
+|$\pi_\theta$|$\pi$|policy of the model|
+|$\theta$|$\theta$|model parameters|
+|$\pi_{\text{ref}}$|—|reference policy（框架未定义，建议新增符号 $\pi_0$ 表示初始参考策略）|
+|$u(q, o)$|—|intrinsic reward signal（框架未定义，建议新增符号 $r_{\text{int}}$ 表示 intrinsic reward）|
+|Self-certainty|—|基于 $\text{KL}(U \Vert p_{\pi_\theta})$ 的 confidence metric（框架未定义，建议新增符号 $\sigma$ 表示 self-certainty score）|
+|$G$|—|group size，即每个 query 采样的候选输出数量|
+|$\hat{A}_{i,t}$|—|advantage estimate（标准 RL 概念，框架未显式定义）|
 
+**注意：** 本文不涉及外部长期记忆 $m_l$、检索算法 $v$、或 RAG 系统 $R$。论文的"memory"仅以 KV cache 形式隐式存在于 context window 内（即 $m_s$）。
 
 ---
 
-## 1. Problem Setting
+## A. QA 依赖度分析
 
-**要解决的问题：** RLVR (Reinforcement Learning with Verifiable Rewards) 依赖外部可验证奖励（如数学题的标准答案、代码的测试用例），成本高且受限于特定领域。本文提出 **RLIF (Reinforcement Learning from Internal Feedback)**，探索 LLM 能否仅凭自身内在信号提升推理能力，无需任何外部奖励或标注数据。
+**该论文的 reward 是否 100% 来自 QA 结果？**
 
-**形式化定义：**
+不是。这是本文的核心创新：INTUITOR 将 reward 完全替换为模型自身的 self-certainty 分数 $\sigma$，定义为均匀分布 $U$ 与模型 next-token 分布之间的平均 KL 散度：
 
-- **输入：** 问题 $q \sim P(Q)$（如 MATH 数据集中的数学题，仅需题目文本，不需要答案）
-- **输出：** 模型生成的回答 $a \sim \pi_\theta(\cdot | q)$
-- **目标：** 最大化内在奖励 $r_{\text{int}}(q, a)$，同时约束策略不偏离参考策略 $\pi_{\text{ref}}$
+$$\sigma(o \mid q) := \frac{1}{\lvert o \rvert} \sum_{i=1}^{\lvert o \rvert} \text{KL}(U \Vert p_{\pi_\theta}(\cdot \mid q, o_{< i}))$$
 
-**任务类型与数据集：**
+训练过程中不使用任何 gold answer，不进行 answer matching，reward 完全由模型内部信号决定。
 
-- 训练数据：MATH 训练集 (7,500 题，仅用题目)、Codeforces 代码竞赛题
-- 评估：GSM8K, MATH500 (in-domain 数学)；LiveCodeBench-v6, CRUXEval-O (out-of-domain 代码)；MMLU-Pro, AlpacaEval (通用能力)
+**去掉 QA 问题后，训练流程是否完全崩溃？**
 
-> 该设定的核心价值在于完全消除了对 gold answer 的依赖，使得 RL 训练可扩展到缺乏标准答案的开放领域。
+不会崩溃。INTUITOR 仅需要 question/prompt $q$（不需要对应的 answer），训练在 MATH 数据集的 question-only 部分上即可运行。但 $q$ 的分布仍然重要——训练仍然需要有意义的 prompt 来触发推理。
 
----
+**是否存在任何隐含的非 QA 奖励成分？**
 
-## 2. Training Procedure
+Self-certainty 本身就是一个完全非 QA 的奖励信号。它奖励的是模型对自身输出的"确信程度"，而非输出是否匹配某个标准答案。此外，KL penalty $\beta \cdot D_{\text{KL}}(\pi_\theta \Vert \pi_{\text{ref}})$ 也是一个隐含的正则化信号，防止策略过度偏离初始分布。
 
-**训练流程概述：**
-
-INTUITOR 基于 GRPO (Group Relative Policy Optimization) 框架，将外部奖励替换为 self-certainty 内在信号。流程如下：
-
-1. 对每个问题 $q$，使用行为策略 $\pi_{\theta_{\text{old}}}$ 采样 $G$ 个候选输出 $a_1, \dots, a_G$
-2. 对每个输出 $a_i$ 计算 self-certainty 分数 $u_i = \text{SC}(a_i | q)$
-3. 通过组内归一化计算优势估计 $\hat{A}_{i,t}$
-4. 使用 GRPO 的 clipped policy gradient 更新策略 $\pi_\theta$
-
-**核心公式：**
-
-Self-certainty 定义（论文 Eq. 2，框架符号标注）：
-
-$$\text{SC}(a \mid q) := \frac{1}{\lvert a \rvert} \sum_{i=1}^{\lvert a \rvert} \text{KL}\bigl(U \Vert\, p_{\pi_\theta}(\cdot \mid q, a_{< i})\bigr) = -\frac{1}{\lvert a \rvert \cdot \lvert V \rvert} \sum_{i=1}^{\lvert a \rvert} \sum_{j=1}^{\lvert V \rvert} \log\bigl(\lvert V \rvert \cdot p_{\pi_\theta}(j \mid q, a_{< i})\bigr)$$
-
-其中 $U$ 为词表上的均匀分布，$a_{<i}$ 对应上下文 $C$。
-
-GRPO 目标函数（论文 Eq. 3，Section 3.2）：
-
-$$\mathcal{J}_{\text{GRPO}}(\theta) = \mathbb{E}_{q, {a_i}_{i=1}^G \sim \pi_{\theta_{\text{old}}}} \left[ \frac{1}{G} \sum_{i=1}^{G} \frac{1}{|a_i|} \sum_{t=1}^{|a_i|} \left( \min\left[ c_{i,t}(\theta) \hat{A}_{i,t},\ \text{clip}_\epsilon(c_{i,t}(\theta)) \hat{A}_{i,t} \right] - \beta D_{\text{KL}}(\pi_\theta | \pi_{\text{ref}}) \right) \right]$$
-
-其中 $c_{i,t}(\theta) = \frac{\pi_\theta(a_{i,t} | q, a_{i,<t})}{\pi_{\theta_{\text{old}}}(a_{i,t} | q, a_{i,<t})}$ 为重要性权重。
-
-优势估计（论文 Eq. 3）：
-
-$$u_i = \text{SC}(a_i | q), \quad \hat{A}_{i,t} = \frac{u_i - \text{mean}({u_1, \dots, u_G})}{\text{std}({u_1, \dots, u_G})}$$
-
-**Memory 如何参与训练：** 本文不显式使用外部 memory ($m_l$)。Self-certainty 可理解为模型在生成过程中对其隐式 working memory ($m_s$，即 KV cache / 已生成上下文) 质量的自评估。奖励信号来源于模型对每个 token 位置输出分布的 "锐度" 的平均值。
-
-**关键设计选择：**
-
-- 使用 **online** self-certainty（奖励模型随策略共同演化），避免 offline 固定模型导致的 reward hacking（Section 5.4）
-- KL 惩罚 $\beta = 0.005$（默认），防止策略偏离过远（Appendix B.1）
-- Group size $G = 7$（默认），每步处理 128 个问题
-
-> Self-certainty 使用 $\text{KL}(U | p)$（mode-seeking）而非熵 $H(p)$（mode-covering），论文指出这使其对生成长度的偏差更小。我觉得这是一个有意思的设计选择，与 concurrent work EM-RL 的熵最小化形成对比。
+> INTUITOR 是目前少数完全脱离 QA reward 的 RL 训练方法之一。但值得注意的是，评估仍然 100% 依赖 QA 指标（GSM8K, MATH500, LiveCodeBench accuracy 等）。这形成了一个有趣的不对称：训练信号是非 QA 的，但成功标准仍由 QA 定义。
 
 ---
 
-## 3. Reward Signal
+## B. Memory 价值盲区
 
-**奖励信号：** Self-certainty $\text{SC}(a | q)$，即模型在生成每个 token 时输出分布与均匀分布之间 KL 散度的平均值。值越高表示模型越 "确信"。
+**方法能否激励存储"当前无对应问题、未来可能有用"的信息？**
 
-**奖励如何与 memory 交互：** Self-certainty 是逐 token 计算并取平均的过程奖励（process reward），而非仅基于最终结果的结果奖励（outcome reward）。它评估的是模型在整个生成轨迹 $T$ 上对上下文 $C = (q, a_{<i})$ 的理解程度。
+不适用。INTUITOR 不涉及显式的 memory 操作（store / retrieve / delete / update）。模型的"记忆"仅限于 context window 内的 KV cache（$m_s$），不存在持久化的外部记忆 $m_l$。因此，不存在"选择性存储"的决策过程。
 
-**与 RL reward 的关系：**
+**Delete/Update 是否也完全由 QA 表现驱动？**
 
-- 在 GRPO 框架中，self-certainty 分数直接替代外部 binary reward（正确/错误），经过组内 z-score 归一化后作为优势估计
-- 这是一个 **连续、密集、过程感知** 的奖励信号，对比 RLVR 的 **二元、稀疏、结果导向** 奖励
-- 论文实验表明（Section 5.4, Figure 8），经过 INTUITOR 训练后，self-certainty 对正确/错误回答的区分能力显著增强（Mann-Whitney U test, $p = 8.2 \times 10^{-24}$, $r = 0.45$）
+不适用。框架中没有 memory operation。
 
-**与替代信号的对比（Appendix B.4）：**
+**是否区分了不同类型的记忆价值（informational / procedural / contextual）？**
 
-- 熵最小化 (EM)：导致重复退化和模型崩溃
-- 随机奖励：严重降低性能
-- Log probability（unnormalized）：偏向短生成，导致退化
-- Normalized log probability：偏向长生成，被快速利用
-- Self-certainty 在所有替代方案中表现最稳定
+未显式区分。但论文的实验结果隐含地表明 INTUITOR 能同时提升多种能力：procedural knowledge（数学推理步骤、代码生成流程）、contextual understanding（instruction following）。Self-certainty 作为 reward 似乎能间接激励模型组织更好的"内部工作记忆"——即更长、更结构化的 reasoning trace $t$。
 
-> Self-certainty 作为奖励的一个隐含假设是：模型的置信度与输出质量正相关。这在预训练充分的模型上成立，但在预训练不足的模型上可能失败，例如 Llama3.2-3B-Base 在 MATH 上训练失败。
+> **评注：** 虽然 INTUITOR 不直接处理 memory 问题，但其 self-certainty 信号暗示了一种 intrinsic quality metric：模型对自身输出越确信，说明其内部"工作记忆"组织得越好。这种思路可以迁移到 memory operation 的 reward 设计中，例如，memory 操作后模型 self-certainty 的变化可以作为该操作质量的代理指标。
 
 ---
 
-## 4. Inference Procedure
+## C. QA 评估的局限性
 
-**推理时流程：**
+**评估中是否有任何非 QA 指标？**
 
-- 使用 greedy decoding，与训练时的采样策略不同（训练时 temperature = 0.9）
-- 推理时不涉及 self-certainty 计算或任何特殊的 memory 读/写机制
-- 使用与训练相同的 chat-style prompting format（MMLU-Pro 除外）
+部分有。AlpacaEval 2.0（Length-Controlled Win Rate）评估的是 instruction following 质量，由 GPT-4.1 判断，而非简单的 answer matching。此外，论文还报告了 response length evolution（Figure 3）、reasoning emergence（Figure 6）、self-certainty 分布分离度（Figure 8, Mann-Whitney U test）等定性/定量分析，但这些不作为主要评估指标。
 
-**与训练阶段的差异：**
+**如果构造"关键信息存在但从不被提问"的测试，该方法预期表现如何？**
 
-- 训练时：对每个 $q$ 采样 $G$ 个候选并计算 self-certainty 做相对比较
-- 推理时：直接 greedy decode 单条输出，无需 self-certainty 评分
-- 推理时观察到的涌现行为：模型自发产生 pre-reasoning（先用自然语言推理，再生成结构化输出），这在训练 prompt 中并未要求（Section 5.2, Figure 5）
+不适用。INTUITOR 不涉及信息的选择性存储和检索。但从其设计哲学推断：self-certainty 奖励的是"模型对输出的确信度"，而非"输出是否回答了特定问题"。理论上，如果 self-certainty 被用于训练 memory 系统，它可能会激励存储那些能提升模型整体确信度的信息，即使这些信息不对应任何具体问题。
 
-> 推理阶段的简洁性是 INTUITOR 的优势之一——训练完成后不需要额外的 reward model 或 verifier。涌现的 long-form reasoning 行为是一个值得深入研究的现象。
+**消融实验是否揭示了 QA 指标无法捕捉的现象？**
+
+是的，论文发现了多个 QA accuracy 无法完全捕捉的现象：
+
+1. **Emergent reasoning**：INTUITOR 训练的模型会自发生成推理步骤（Figure 5, 6），即使 prompt 未要求。这种行为改善了代码生成质量，但 QA accuracy 无法衡量推理过程本身的质量。
+2. **Self-certainty 分离度**：Figure 8 显示 INTUITOR 训练后的模型能更好地区分自身正确和错误的回答（$r = 0.45$, $p = 8.2 \times 10^{-24}$），这是一种"自我校准"能力，QA accuracy 无法捕捉。
+3. **Cross-domain generalization pattern**：Figure 4 显示 LiveCodeBench 性能在 MATH500 accuracy 停滞后仍继续上升，说明 QA accuracy 在单一 benchmark 上无法反映模型整体能力的持续增长。
+
+> **评注：** Self-certainty 的分离度是一个特别值得关注的非 QA 指标。它衡量的是模型"知道自己知道什么"的能力。一个好的 memory 系统应该知道哪些记忆是可靠的、哪些需要更新。
+
+---
+
+## D. 非 QA 范式的可能性
+
+**方法中是否有可脱离 QA 独立评估的组件？**
+
+是的。Self-certainty 本身就是一个完全独立于 QA 的指标。它可以在无 ground truth 的情况下评估：
+
+- 模型对自身输出的确信程度
+- 不同输出候选的相对质量（self-certainty ranking）
+- 训练过程中模型内部信号的稳定性（online vs. offline annotator, Figure 7）
+
+**框架能否接入非 QA reward？需要哪些修改？**
+
+INTUITOR 本身就是一个接入非 QA reward 的框架。其设计具有高度模块化：在 GRPO 的 advantage computation 中，只需替换 $u_i$ 的计算方式即可接入任何 intrinsic reward。论文在 Section 6 中明确提出可以将 self-certainty 与其他信号（如 RLHF、RLVR、formatting reward）组合使用。
+
+对于 memory 场景的可能修改：
+
+1. 将 $u_i$ 替换为 memory operation 后的 self-certainty 变化量：$\Delta\sigma = \sigma_{\text{after}} - \sigma_{\text{before}}$
+2. 引入 memory utilization rate 作为额外的 intrinsic reward
+3. 使用 counterfactual contribution：比较有/无特定记忆时的 self-certainty 差异
+
+**Memory operation 设计是否暗示了某种内在质量标准？**
+
+本文不涉及 memory operation，但 self-certainty 本身暗示了一个强有力的内在质量标准：**好的输出 = 模型自己确信的输出**。这个标准可以推广到 memory：**好的记忆操作 = 能提升模型后续输出确信度的操作**。
+
+> **评注：** INTUITOR 的最大贡献在于证明了 intrinsic reward（self-certainty）可以替代 external reward（QA accuracy）驱动 RL 训练。这为 memory 系统的非 QA 训练提供了直接的技术路径。关键问题是：self-certainty 在 memory-intensive 场景中是否仍然是一个好的代理指标？例如，模型可能对错误的记忆非常确信（confident but wrong），这需要进一步研究。
 
 ---
 
 ## 5. RQ 分析
-### RQ1: What is memory?
 
-本文未显式定义或使用外部 memory。隐式地，模型的 working memory 体现为生成过程中的上下文 $(q, a_{<i})$，即 KV cache。Self-certainty 衡量的正是模型对该隐式 working memory 的 "理解程度"。
+### Q1: QA reward 是否是 memory 的充分训练信号？
 
-### RQ2: How memory evolves, operates?
+这篇文章用实验证明了 QA reward 不是训练推理能力的必要条件：self-certainty 作为唯一 reward 信号，可以在数学推理上匹配 GRPO（使用 gold answer）的表现，并在代码生成上实现更好的跨域泛化。但论文未直接讨论 memory 场景。从 self-certainty 作为 process-level reward（跨所有 token 计算，而非仅看最终答案）这一特性来看，它比 QA 的 0/1 binary reward 更能捕获推理过程的质量，部分缓解了 credit assignment 路径过长的问题。
 
-隐式 memory（上下文）在生成过程中逐 token 增长。INTUITOR 的训练鼓励模型生成更长、更详细的推理链，从而丰富上下文信息。涌现的 pre-reasoning 行为表明模型学会了主动构建更有效的 "working memory"。无外部 memory 的更新机制。
+### Q2: QA benchmark 是否是 memory 的充分评估标准？
 
-### RQ3: Which component is optimized? Which signal is used?
+论文未直接涉及此问题。
 
-优化的组件是策略网络参数 $\theta$（即 LLM 自身）。使用的信号是 self-certainty，一种基于 $\text{KL}(U | p_{\pi_\theta})$ 的内在置信度度量，通过 GRPO 的 advantage-weighted policy gradient 进行优化。
+### Q3: 能否构造非 QA 驱动的 memory 训练数据与信号？
 
-### RQ4: Regarding online optimization
+这篇文章提供了一个非 QA intrinsic reward 的成功案例：self-certainty。论文证明了以下关键点：
 
-我认为是涉及的。 INTUITOR 使用 online self-certainty（奖励由当前策略模型计算，而非固定的 base model）。Section 5.4 和 Figure 7 明确对比了 online vs. offline 两种模式：offline 模式在约 100 步后遭遇 reward exploitation（模型学会在答案后附加已解决的问题以膨胀 certainty），而 online 模式因奖励信号与策略共同演化而避免了这一问题。
+1. **Intrinsic reward 可行**：self-certainty 作为唯一信号即可驱动有效训练
+2. **Online 信号优于 offline**：reward 信号需要与 policy 共同演化以防止 reward hacking（Figure 7）
+3. **信号可组合**：Section 6 和 Appendix B.7 探讨了将 self-certainty 与 golden-answer reward 组合的可能性
 
+对于 memory 场景，self-certainty 可以作为一种 intrinsic reward 的候选（如 information gain 的代理）。但论文未涉及长期交互、持续规划、偏好跟踪等 memory-specific 的数据构造。
+
+> **评注：** INTUITOR 对 Q3 的贡献最大，它证明了 intrinsic reward 可以工作。但从 memory 角度看，self-certainty 衡量的是"模型对当前输出的确信度"，而非"记忆操作对未来的价值"。将 self-certainty 扩展到 temporal credit assignment（跨多轮交互的记忆价值评估）是一个重要的开放问题。
 
 ---
 
 ## Conclusion
 
 这篇论文提出了 RLIF (Reinforcement Learning from Internal Feedback) 范式，用模型自身的 self-certainty（基于输出分布与均匀分布的 KL 散度）替代 RLVR 中的外部可验证奖励，实现了完全无监督的 RL 训练。self-certainty 本质上是在评估模型对其上下文（隐式 working memory）的理解质量。涌现的 pre-reasoning 行为可以理解为模型学会了主动构建更有效的 "working memory" 来提升自身确信度。训练过程中涌现了类似 DeepSeek-R1 的长链推理行为，且 online self-certainty 机制有效防止了 reward hacking。我认为它提出了一种不依赖外部信号的 online 优化方案，并且文章中还通过 online vs offline 的对比实验清晰展示了 co-evolving reward 对防止 reward exploitation 的关键作用。
+对于 memory 研究，我认为最大的启示是：intrinsic model signal 可以替代 external QA reward 驱动 RL 训练，这为构造非 QA 的 memory 训练信号提供了概念验证和技术基础。
