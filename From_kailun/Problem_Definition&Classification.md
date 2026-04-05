@@ -174,7 +174,7 @@ $$C_N \sim \pi_\theta(a_N, q(R), C_N \mid q, C_{N-1})$$
 
 ### 优化显式记忆 ($C_N$)：
 
-**核心思想**：优化怎么存、怎么管、怎么取、怎么组装
+**核心思想**：优化 $C_N$ 怎么存、怎么管、怎么取、怎么组装
 
 ---
 
@@ -190,6 +190,8 @@ $$C_N \sim \pi_\theta(a_N, q(R), C_N \mid q, C_{N-1})$$
 
 **核心思想**：把外显记忆内化为内隐记忆，即把 $C_N$ 中的知识固化到 $\theta$
 
+**形式化**：
+
 $$\theta' = h(\theta, C_N) \quad \text{使得} \quad \pi_{\theta'}(\cdot \mid q) \approx \pi_\theta(\cdot \mid q, C_N)$$
 
 即通过某种更新函数 $h$ （未定义），将 $C_N$​ 中的信息压缩进参数 $\theta$，使得不再需要 $C_N$​ 也能得到类似的输出
@@ -201,6 +203,8 @@ $$\theta' = h(\theta, C_N) \quad \text{使得} \quad \pi_{\theta'}(\cdot \mid q)
 > 论文：[A-MEM](https://arxiv.org/abs/2502.12110)
 
 **核心思想**：模型利用自身能力主动生成、整理、增强外部记忆
+
+**形式化**：
 
 $$m_l^{(t+1)} = g_l(m_l^{(t)}, \pi_\theta(\text{reflect} \mid m_s^{(t)}, C_N))$$
 
