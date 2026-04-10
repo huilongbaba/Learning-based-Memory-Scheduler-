@@ -80,7 +80,7 @@ $$\mathcal{L}_{KM+KE} = \min_{\theta_{KE}, w} - \sum_i \log p(a_i \mid q_i; [\th
 
 ## 3. Reward Signal
 
-- **奖励类型：** 本文 **不使用 RL 奖励信号**。训练信号来自蒸馏损失（KL 散度 + L1 隐藏状态匹配），属于监督学习范畴。
+- **奖励类型：** 本文**不使用 RL 奖励信号**。训练信号来自蒸馏损失（KL 散度 + L1 隐藏状态匹配），属于监督学习范畴。
 - **奖励来源：** 不适用。评估指标为 Rouge-L（NarrativeQA）和 Accuracy（QuALITY），但这些不作为训练信号。
 - **奖励分配：** 不适用。蒸馏损失在每个 token 位置和每一层都提供梯度信号，可视为一种天然的"dense signal"。
 - **辅助奖励 / 正则项：** 无显式正则项。隐藏状态 L1 损失可被视为一种辅助信号，为每层 LoRA 提供更直接的 credit assignment。
