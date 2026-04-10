@@ -66,11 +66,11 @@
 
 > 此方向可能与 RQ4（价值函数设计）合并。
 
-### 核心问题
+### Research questions
 
-1. **QA reward 是否是 memory 的充分训练信号？** → 初步结论：否
-2. **QA benchmark 是否是 memory 的充分评估标准？** → 初步结论：否
-3. **能否构造非 QA 驱动的 memory 训练数据与信号？** → 待探索
+1. **QA reward 是否是 memory 的充分训练信号？** - 初步结论：否
+2. **QA benchmark 是否是 memory 的充分评估标准？** - 初步结论：否
+3. **能否构造非 QA 驱动的 memory 训练数据与信号？** - 待探索
 
 ### 候选非 QA 评估指标
 

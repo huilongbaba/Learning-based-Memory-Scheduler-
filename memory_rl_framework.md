@@ -20,6 +20,8 @@
 
 * **mₛ**: short-term memory (working memory)
 * **mₗ**: long-term memory (external memory)
+* **gₛ​​**: short-term memory update function (working memory refresh)
+- **gₗ**: long-term memory update function (memory consolidation & forgetting)
 
 ---
 
