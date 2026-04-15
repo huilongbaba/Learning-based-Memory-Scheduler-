@@ -129,18 +129,26 @@ $$\theta' = h(\theta, C_N) \quad \text{使得} \quad \pi_{\theta'}(\cdot \mid q)
 
 ## 论文分类表
 
-| Paper                   | T1 纯文本 | T2 多组件 | T3 固定长度压缩 | T4 推理时 | T5 参数化 | T6 可插拔模型 |
-| ----------------------- | ------ | ------ | --------- | ------ | ------ | -------- |
-| Memory-R1               | +      |        |           |        |        | +        |
-| MemSearcher             |        |        | +         |        | +      |          |
-| General Agentic Memory  | +      |        |           |        |        | +        |
-| Memento                 | +      |        |           |        |        |          |
-| Just in Time            | +      |        |           |        |        |          |
-| Fine-tuning with RAG    | +      |        |           |        | +      |          |
-| Knowledge Modules (DCD) |        |        |           |        | +      |          |
-| A-MEM                   |        | +      |           |        |        |          |
-| MSA                     |        |        |           | +      |        |          |
-| RLIF                    | -      | -      | -         | -      | -      | -        |
+| Paper                          | T1 纯文本 | T2 多组件 | T3 固定长度压缩 | T4 推理时 | T5 参数化 | T6 可插拔模型 |
+| ------------------------------ | ------ | ------ | --------- | ------ | ------ | -------- |
+| Memory-R1                      | +      |        |           |        |        | +        |
+| MemSearcher                    |        |        | +         |        | +      |          |
+| General Agentic Memory         | +      |        |           |        |        | +        |
+| Memento                        | +      |        |           |        |        |          |
+| Just in Time                   | +      |        |           |        |        |          |
+| Fine-tuning with RAG           | +      |        |           |        | +      |          |
+| Knowledge Modules (DCD)        |        |        |           |        | +      |          |
+| A-MEM                          |        | +      |           |        |        |          |
+| MSA                            |        |        |           | +      |        |          |
+| RLIF                           | -      | -      | -         | -      | -      | -        |
+| RF-Mem                         | +      |        |           |        |        |          |
+| GRU-Mem                        |        |        | +         |        |        |          |
+| UMA                            |        | +      |           |        |        |          |
+| HyperRAG                       |        | +      |           |        |        |          |
+| Mnemis                         |        | +      |           |        |        |          |
+| MIRA                           |        | +      |           |        |        | +        |
+| Memory-Based Advantage Shaping |        | +      |           |        |        | +        |
+| EMPO                           | +      |        |           |        | +      |          |
 
 > `+` = 适用  
 > `—` = 此维度不适用（无记忆系统 / 无训练过程）  

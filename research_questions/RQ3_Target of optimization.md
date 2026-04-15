@@ -51,18 +51,26 @@
 
 ## 论文分类表
 
-| Paper                   | G1 准确度 | G2 效率 | G3 行动奖励 |
-| ----------------------- | ------ | ----- | ------- |
-| Memory-R1               | +      |       |         |
-| MemSearcher             | +      | +     |         |
-| General Agentic Memory  | +      |       |         |
-| Memento                 | +      |       |         |
-| Just in Time (JitRL)    |        |       | +       |
-| Fine-tuning with RAG    | +      |       |         |
-| Knowledge Modules (DCD) | +      |       |         |
-| A-MEM                   | -      | -     | -       |
-| MSA                     | +      |       |         |
-| RLIF                    | +      |       |         |
+| Paper                          | G1 准确度 | G2 效率 | G3 行动奖励 |
+| ------------------------------ | ------ | ----- | ------- |
+| Memory-R1                      | +      |       |         |
+| MemSearcher                    | +      | +     |         |
+| General Agentic Memory         | +      |       |         |
+| Memento                        | +      |       |         |
+| Just in Time (JitRL)           |        |       | +       |
+| Fine-tuning with RAG           | +      |       |         |
+| Knowledge Modules (DCD)        | +      |       |         |
+| A-MEM                          | -      | -     | -       |
+| MSA                            | +      |       |         |
+| RLIF                           | +      |       |         |
+| RF-Mem                         | -      | -     | -       |
+| GRU-Mem                        | +      | +     |         |
+| UMA                            | +      |       |         |
+| HyperRAG                       | +      | +     |         |
+| Mnemis                         | -      | -     | -       |
+| MIRA                           | +      | +     |         |
+| Memory-Based Advantage Shaping | +      | +     |         |
+| EMPO                           | +      |       |         |
 
 > `+` = 适用  
 > `—` = 此维度不适用（无记忆系统 / 无训练过程）  
