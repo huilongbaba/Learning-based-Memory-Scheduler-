@@ -26,7 +26,7 @@
 
 这篇文章用了 LLM 离线生成的 subgoal 分解和 trajectory segments，以及 agent 自身高回报经验的 trajectory 片段，将它们共同构建成一个图结构记忆。  
 最后得到了一个更好的 RL policy $\pi_\theta$。MIRA 并没有训练出一个独立的可插拔记忆管理模型，而是通过 memory graph 派生的 utility 信号来 shaping PPO 的 advantage estimation，最终产出一个在稀疏奖励环境中 sample efficiency 更高的 RL 策略。  
-优化了G1和G2，即 RL agent 的 cumulative environment reward（任务成功率和回报），通过 utility-shaped advantage 加速早期学习，同时保持 PPO 的长期收敛性。核心指标是 mean return 和 success rate。
+优化了 G1 和 G2，即 RL agent 的 cumulative environment reward（任务成功率和回报），通过 utility-shaped advantage 加速早期学习，同时保持 PPO 的长期收敛性。核心指标是 mean return 和 success rate。
 
 ---
 

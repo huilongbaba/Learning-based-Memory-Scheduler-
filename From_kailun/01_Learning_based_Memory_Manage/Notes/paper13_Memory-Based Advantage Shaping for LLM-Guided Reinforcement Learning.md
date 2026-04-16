@@ -28,8 +28,8 @@
 
 ## 概览
 
-这篇文章用了 LLM 提供的 subgoal 分解和 trajectory 建议（离线为主、偶尔在线查询），以及 agent 自身成功 rollout 的经验 trajectory。这些信息被编码进一个 memory graph $\mathcal{G}$。  
-最后得到了一个经过 advantage shaping 训练的 RL policy network $\pi_\theta$，该 policy 能够在稀疏奖励环境中更快地学习有效策略。Memory graph 本身也是一个持续演化的副产品。  
+这篇文章用了 LLM 提供的 subgoal 分解和 trajectory 建议，以及 agent 自身成功 rollout 的经验 trajectory。这些信息被编码进一个 memory graph $\mathcal{G}$。  
+最后得到了一个 RL policy network $\pi_\theta$，该 policy 能够在稀疏奖励环境中更快地学习有效策略。Memory graph 本身也是一个持续演化的副产品。  
 优化了G1，即RL agent 在环境中的累积回报（mean return）和任务成功率（success rate），同时优化了G2，即 sample efficiency，并减少了对 LLM 持续查询的依赖。
 
 ---

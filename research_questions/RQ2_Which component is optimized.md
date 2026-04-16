@@ -86,6 +86,8 @@
 | MIRA                           | +        |          |         |         |
 | Memory-Based Advantage Shaping | +        |          |         |         |
 | EMPO                           |          | +        |         |         |
+| MemPO                          |          | +        |         |         |
+| MemSifter                      | +        |          | +       |         |
 
 > `+` = 适用  
 > `—` = 此维度不适用（无记忆系统 / 无训练过程）  
