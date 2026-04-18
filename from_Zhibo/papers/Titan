@@ -3,15 +3,15 @@ Problem setting:
 An∼πθ(a∣q,C)A_n \sim \pi_\theta(a|q, C)An​∼πθ​(a∣q,C) 
 
 以前的inference (linear)
-$$
+$
 M_t = M_{t-1} + K_t^TV_t
 Y = Q_tM_t
-$$
+$
 
 新方法
-$$
+$
 M_t = M_{t-1} + S_t(x_t)
 Y = M_t(x_tW_Q)
-$$
+$
 总结
 把KV压缩进入这个M_t.
