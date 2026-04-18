@@ -102,8 +102,6 @@ r_1 = \frac{1}{m} \sum_{j=1}^{m} \mathbf{1}[\hat{a}_j = a_j]
 \hat{a}_j = R(q_j, v(m_l^n, q_j))
 \]
 
-👉 对应 **RAG pipeline**
-
 ---
 
 ### (2) Tool Valid（结构正确）
