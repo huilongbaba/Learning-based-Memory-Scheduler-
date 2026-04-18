@@ -34,6 +34,7 @@
 - **Loop efficiency**：Agent loop 的轮数（越少越好）
 - **KV cache 命中率**：缓存复用的比例
 - **Memory budget 利用率**：在固定 memory budget $L$ 下的信息保留质量
+- **Memory compression**: 保留质量的条件下缩小memory budget $L$
 
 **框架对应**：约束 $|C_N|$ 或 agent loop 次数 $N$ 的同时最大化回答质量。
 
