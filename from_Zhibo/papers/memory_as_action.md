@@ -78,9 +78,7 @@ $$
 
 状态转移
 
-$$
-m_s^{t+1}
-=
+$$m_s^{t+1}=
 \{z_i \in m_s^t \mid id_i \notin I_{target}\}
 \oplus
 (a_t, o_t)
