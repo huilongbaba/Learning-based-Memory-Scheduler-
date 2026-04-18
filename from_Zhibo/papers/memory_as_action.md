@@ -26,6 +26,7 @@ $$
 $$
 
 这里的优化目标包括了 提升任务完成率，降低constraint 被违反的比例。
+
 ---
 
 # 2. Training
@@ -34,10 +35,10 @@ $$
 $$
 \mathcal{L}(\theta) =
 - \mathbb{E}_{u \sim D}
-\left[
+\left\[
 \frac{1}{|G(u)|}
 \sum_{\tau \in G(u)} L_\tau
-\right]
+\right\]
 $$
 
 $$
