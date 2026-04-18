@@ -26,19 +26,16 @@ a_n \sim \pi_{\text{llm}}(a_n \mid q, r(q, M_T))
 优化目标：**最大化 QA accuracy**
 
 ---
-
 ## Training
 
 将 **memory construction** 建模为一个 MDP：
-### State
+State
 
 \[
 s_t = (c_t, m_l^{t-1})
 \]
 
----
-
-### Action
+Action
 
 \[
 a_t = \{a_t^{(1)}, \dots, a_t^{(K_t)}\}, \quad a_t^{(k)} \in \mathcal{A}_{write}
@@ -50,9 +47,7 @@ a_t = \{a_t^{(1)}, \dots, a_t^{(K_t)}\}, \quad a_t^{(k)} \in \mathcal{A}_{write}
 \mathcal{A}_{write} = \{\text{insert}, \text{update}, \text{delete}\}
 \]
 
----
-
-### Memory Update
+Memory Update
 
 \[
 m_l^t = g_l(m_l^{t-1}, a_t)
@@ -64,9 +59,7 @@ m_l^t = g_l(m_l^{t-1}, a_t)
 M_t = T(M_{t-1}, a_t)
 \]
 
----
-
-### Objective (PPO)
+Objective (PPO)
 
 \[
 J(\theta) = \mathbb{E} \left[
@@ -88,9 +81,7 @@ J(\theta) = \mathbb{E} \left[
 r_t = r_1 + r_{2,t} + \beta r_3 + \gamma r_{4,t}
 \]
 
----
-
-### (1) QA Correctness（核心）
+(1) QA Correctness（核心）
 
 \[
 r_1 = \frac{1}{m} \sum_{j=1}^{m} \mathbf{1}[\hat{a}_j = a_j]
@@ -102,25 +93,20 @@ r_1 = \frac{1}{m} \sum_{j=1}^{m} \mathbf{1}[\hat{a}_j = a_j]
 \hat{a}_j = R(q_j, v(m_l^n, q_j))
 \]
 
----
 
-### (2) Tool Valid（结构正确）
+(2) Tool Valid（结构正确）
 
 \[
 r_{2,t} = \frac{1}{K_t} \sum_{k=1}^{K_t} \mathbf{1}[a_t^{(k)} \text{ valid}]
 \]
 
----
-
-### (3) Compression（压缩能力）
+(3) Compression（压缩能力）
 
 \[
 r_3 = 1 - \frac{|m_l^n|}{\sum_{i=1}^{n} |c_i|}
 \]
 
----
-
-### (4) Memory Quality（语义质量）
+(4) Memory Quality（语义质量）
 
 \[
 r_{4,t} = \frac{1}{K_t} \sum_{k=1}^{K_t} \mathbf{1}[a_t^{(k)} \text{ semantically valid}]
@@ -130,7 +116,7 @@ r_{4,t} = \frac{1}{K_t} \sum_{k=1}^{K_t} \mathbf{1}[a_t^{(k)} \text{ semanticall
 
 ## Inference
 
-### Memory Construction
+Memory Construction
 
 对每个 chunk：
 
@@ -138,21 +124,19 @@ r_{4,t} = \frac{1}{K_t} \sum_{k=1}^{K_t} \mathbf{1}[a_t^{(k)} \text{ semanticall
 m_l^t = g_l(m_l^{t-1}, a_t), \quad a_t \sim \pi_\theta
 \]
 
----
 
-### Retrieval + Answer
 
-#### Retrieval
+Retrieval + Answer
+
+Retrieval
 
 \[
 z = v(m_l^n, q)
 \]
 
-使用 **BM25 top-k**
+使用 BM25 top-k
 
----
-
-#### Generation
+Generation
 
 \[
 a_n \sim \pi_{\text{llm}}(a_n \mid q, r(q, M_T))
