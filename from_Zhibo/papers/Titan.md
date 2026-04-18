@@ -1,0 +1,28 @@
+## Problem setting:
+在一次问答过程中，1. 优化推理过程的遗忘  2. 如何超过context window。 （不是多轮对话视角，是单轮）
+$An∼πθ(a∣q,C)A_n \sim \pi_\theta(a|q, C)An​∼πθ​(a∣q,C) $
+
+以前的inference (linear)
+$$M_t = M_{t-1} + K_t^TV_t, Y = Q_tM_t
+$$
+
+新方法
+$$M_t = M_{t-1} + S_t(x_t),Y = M_t(x_tW_Q)
+$$
+总结
+把KV压缩进入这个M_t.
+
+## training process
+NLP
+
+## reward signal
+NLP
+
+## inference
+similar to normal LLM.
+
+
+## conclusion
+Not relevant for us, but interested to read. NIPS 2026 from Google.
+
+
