@@ -31,13 +31,8 @@ $$
 
 # 2. Training
 
-
 $$
-\mathcal{L}(\theta) =
-- \mathbb{E}_{u \sim D}
-\left\[
-\frac{1}{|G(u)|}
-\sum_{\tau \in G(u)} L_\tau
+\mathcal{L}(\theta) = \mathbb{E}_{u \sim D} \left\[\frac{1}{G(u)} \sum_{\tau \in G(u)} L_\tau
 \right\]
 $$
 
@@ -48,6 +43,7 @@ J_{\text{clip}}(y \mid C, A(\tau))
 $$
 
 用了GRPO
+
 ---
 
 # 3. Reward
@@ -62,32 +58,30 @@ r_{pen}, & \text{violation} \\
 \end{cases}
 $$
 
+使用了llm judge来评估
+
 ---
 
 # 4. Inference
 
-Action 由llm给出，包括基本action 和对memorz的修改
-$$
-a_t \sim \pi_\theta(a \mid m_s^t)
+Action 由llm给出，包括基本action 和对memory的修改
+$$ a_t \sim \pi_{\theta}(a \mid m_s^t)
 $$
 
 Memory Action
 
 $$
-a_t^{mem} = (I_{target}, c)
+a_t^{mem}, a_t = \pi_{\theta}(\cdots|C)
 $$
 
 状态转移
 
-$$m_s^{t+1}=
-\{z_i \in m_s^t \mid id_i \notin I_{target}\}
-\oplus
-(a_t, o_t)
+$$m_s^{t+1}=a_t^{mem} (m_s^t, a_t, o_t)
 $$
 
 
 $$
-a_n​∼πθ​(a∣msT​)
+a_n​∼πθ​(a∣m_s^T​)
 $$
 
 ---
