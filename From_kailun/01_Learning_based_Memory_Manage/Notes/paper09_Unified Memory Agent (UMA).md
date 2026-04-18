@@ -112,7 +112,7 @@ $$r_{\text{mem}}^{(g)} = r_{\text{tool}}^{(g)} + \text{FutureUtility}(r_{\text{q
 
 UMA 使用 T2：$\mathcal{M}_t = (m^{\text{core}}, \mathcal{B})$，包含一个始终在 context 中的 core summary（类似 Mem-$\alpha$ 的 $m_l^{\text{core}}$）和一个支持 CRUD 的结构化 KV Memory Bank（类似 $m_l^{\text{sem}}$）。同时使用 $m_s$（交互历史 $h_t$）作为短期记忆。这是显式记忆的多组件表征。
 
-### RQ2 (Which component is optimized?)
+### RQ2 (Which component is optimized? Which signal is used?)
 
 UMA 优化 O2 主 LLM 本身：直接对 Qwen3-4B-Instruct 的全部权重 $\theta$ 进行端到端 RL 训练（Task-Stratified GRPO）。单一模型同时负责记忆维护和问答，不使用独立辅助模型。
 

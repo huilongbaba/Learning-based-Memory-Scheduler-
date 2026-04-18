@@ -96,9 +96,9 @@
 
 ### RQ1 (What is memory?)
 
-RF-Mem 中的记忆是用户历史对话的 embedding 向量集合，属于T1。记忆条目以文本形式存储，通过 dense encoder 编码为向量后存入向量索引，支持 cosine similarity 检索。记忆本身的数据结构与标准 Dense Retrieval 完全相同，RF-Mem 的创新在于检索策略而非记忆表征。
+RF-Mem 中的记忆是用户历史对话的 embedding 向量集合，属于T1。记忆条目以文本形式存储，通过 dense encoder 编码为向量后存入向量索引，支持 cosine similarity 检索。
 
-### RQ3 (Which component is optimized?)
+### RQ3 (Which component is optimized? Which signal is used?)
 
 本文未涉及此问题。RF-Mem 没有训练/优化过程。所有组件（LLM、retriever、阈值参数）均为预设或手工调整。
 

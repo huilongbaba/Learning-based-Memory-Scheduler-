@@ -143,14 +143,17 @@ $$\theta' = h(\theta, C_N) \quad \text{使得} \quad \pi_{\theta'}(\cdot \mid q)
 | RLIF                           | -      | -      | -         | -      | -      | -        |
 | RF-Mem                         | +      |        |           |        |        |          |
 | GRU-Mem                        |        |        | +         |        |        |          |
-| UMA                            |        | +      |           |        |        |          |
+| UMA                            | +      | +      |           |        |        |          |
 | HyperRAG                       |        | +      |           |        |        |          |
 | Mnemis                         |        | +      |           |        |        |          |
-| MIRA                           |        | +      |           |        |        | +        |
-| Memory-Based Advantage Shaping |        | +      |           |        |        | +        |
+| MIRA                           |        | +      |           |        |        |          |
+| Memory-Based Advantage Shaping |        | +      |           |        |        |          |
 | EMPO                           | +      |        |           |        | +      |          |
-| MemPO                          |        |        | +         |        | +      |          |
+| MemPO                          |        |        | +         |        |        |          |
 | MemSifter                      | +      |        |           |        |        | +        |
+| A-MAC                          | +      |        |           |        |        |          |
+| CoMAM                          |        | +      |           |        |        |          |
+| Memex(RL)                      | +      |        | +         |        |        |          |
 
 > `+` = 适用  
 > `—` = 此维度不适用（无记忆系统 / 无训练过程）  

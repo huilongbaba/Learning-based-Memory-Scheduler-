@@ -49,30 +49,43 @@
 
 ---
 
+### **G4：写入决策质量（Write-Decision Quality）**
+
+**定义**：以"每条候选记忆是否应写入 $m_l$"这一分类问题本身的指标作为优化目标，通常对应于人工标注或规则生成的 ground-truth admission labels。
+
+**度量方式**：记忆写入决策本身的质量，不假设下游任务。
+
+**框架对应**：优化 $g_l$ 中的 gating 子策略，使其决策与 $y^*$ 对齐。
+
+---
+
 ## 论文分类表
 
-| Paper                          | G1 准确度 | G2 效率 | G3 行动奖励 |
-| ------------------------------ | ------ | ----- | ------- |
-| Memory-R1                      | +      |       |         |
-| MemSearcher                    | +      | +     |         |
-| General Agentic Memory         | +      |       |         |
-| Memento                        | +      |       |         |
-| Just in Time (JitRL)           |        |       | +       |
-| Fine-tuning with RAG           | +      |       |         |
-| Knowledge Modules (DCD)        | +      |       |         |
-| A-MEM                          | -      | -     | -       |
-| MSA                            | +      |       |         |
-| RLIF                           | +      |       |         |
-| RF-Mem                         | -      | -     | -       |
-| GRU-Mem                        | +      | +     |         |
-| UMA                            | +      |       |         |
-| HyperRAG                       | +      | +     |         |
-| Mnemis                         | -      | -     | -       |
-| MIRA                           | +      | +     |         |
-| Memory-Based Advantage Shaping | +      | +     |         |
-| EMPO                           | +      |       |         |
-| MemPO                          | +      | +     |         |
-| MemSifter                      | +      | +     |         |
+| Paper                          | G1 准确度 | G2 效率 | G3 行动奖励 | G4 写入决策质量 |
+| ------------------------------ | ------ | ----- | ------- | --------- |
+| Memory-R1                      | +      |       |         |           |
+| MemSearcher                    | +      | +     |         |           |
+| General Agentic Memory         | +      |       |         |           |
+| Memento                        | +      |       |         |           |
+| Just in Time (JitRL)           |        |       | +       |           |
+| Fine-tuning with RAG           | +      |       |         |           |
+| Knowledge Modules (DCD)        | +      |       |         |           |
+| A-MEM                          | -      | -     | -       |           |
+| MSA                            | +      |       |         |           |
+| RLIF                           | +      |       |         |           |
+| RF-Mem                         | +      | +     |         |           |
+| GRU-Mem                        | +      | +     | +       | +         |
+| UMA                            | +      |       | +       |           |
+| HyperRAG                       | +      | +     |         |           |
+| Mnemis                         | -      | -     | -       |           |
+| MIRA                           | +      | +     |         |           |
+| Memory-Based Advantage Shaping | +      | +     |         |           |
+| EMPO                           | +      |       |         |           |
+| MemPO                          | +      | +     |         |           |
+| MemSifter                      | +      | +     |         |           |
+| A-MAC                          |        | +     |         | +         |
+| CoMAM                          | +      |       | +       |           |
+| Memex(RL)                      | +      | +     | +       |           |
 
 > `+` = 适用  
 > `—` = 此维度不适用（无记忆系统 / 无训练过程）  

@@ -26,7 +26,7 @@
 |$r^{\text{format}}$|$R_{\text{format}}$|格式奖励|
 |$T$|agent loop 步数 $N$|总 chunk 数 / 循环步数|
 
-> **新符号说明**：论文引入的 $U_t$（update gate）和 $E_t$（exit gate）是对 RNN-like 循环记忆的门控信号，框架中无直接对应。分别用 $u_t$ 和 $e_t$ 表示。
+> **新符号**：论文引入的 $U_t$（update gate）和 $E_t$（exit gate）是对 RNN-like 循环记忆的门控信号，框架中无直接对应。分别用 $u_t$ 和 $e_t$ 表示。
 
 ---
 
@@ -144,4 +144,4 @@ GRU-Mem 的记忆是一个受 token 预算约束的固定长度文本摘要（$\
 
 ## Conclusion
 
-GRU-Mem 针对 MemAgent 在长上下文推理中的两个关键缺陷，记忆爆炸和缺乏退出机制，提出了门控循环记忆框架。它在 RNN-like 的 chunk-by-chunk 记忆更新流程中引入了两个文本控制的门：update gate 决定是否在当前 chunk 上更新记忆，exit gate 决定是否在收集到足够证据后提前终止循环。通过设计针对性的奖励信号（$r^{\text{update}}$ 和 $r^{\text{exit}}$）并使用解耦的优势函数计算，模型能够在端到端 RL 训练中同时学会正确的更新和退出行为。实验表明，GRU-Mem 在多个长上下文 QA 任务上普遍优于 MemAgent，并实现了最高 400% 的推理加速。
+GRU-Mem 针对 MemAgent 在长上下文推理中的两个关键缺陷，记忆爆炸和缺乏退出机制，提出了门控循环记忆框架。它在 RNN-like 的 chunk-by-chunk 记忆更新流程中引入了两个文本控制的门：update gate 决定是否在当前 chunk 上更新记忆，exit gate 决定是否在收集到足够证据后提前终止循环。通过设计针对性的奖励信号（$r^{\text{update}}$ 和 $r^{\text{exit}}$）并使用解耦的优势函数计算，模型能够在端到端 RL 训练中同时学会正确的更新和退出行为。
