@@ -50,7 +50,7 @@ $
 $M_t = T(M_{t-1}, a_t)
 $
 
-Objective (PPO)
+Objective (GRPO)
 
 $J(\theta) = \mathbb{E} \left[
 \sum_{t=1}^{n} \sum_{j=1}^{|a_t|}
