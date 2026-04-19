@@ -99,31 +99,34 @@
 
 ## 论文分类表
 
-| Paper                          | O1 可插拔模型 | O2 主 LLM | O3 检索算法 | O4 工具概率 |
-| ------------------------------ | -------- | -------- | ------- | ------- |
-| Memory-R1                      | +        |          |         |         |
-| MemSearcher                    |          | +        |         |         |
-| General Agentic Memory         | +        |          |         |         |
-| Memento                        |          |          | +       |         |
-| Just in Time (JitRL)           |          |          |         | +       |
-| Fine-tuning with RAG           |          | +        |         |         |
-| Knowledge Modules (DCD)        |          | +        |         |         |
-| A-MEM                          | -        | -        | -       | -       |
-| MSA                            |          | +        | +       |         |
-| RLIF                           |          | +        |         |         |
-| RF-Mem                         |          |          | +       |         |
-| GRU-Mem                        |          | +        |         |         |
-| UMA                            |          | +        |         |         |
-| HyperRAG                       |          |          | +       |         |
-| Mnemis                         | -        | -        | -       | -       |
-| MIRA                           | +        |          |         |         |
-| Memory-Based Advantage Shaping | +        |          |         |         |
-| EMPO                           |          | +        |         |         |
-| MemPO                          |          | +        |         |         |
-| MemSifter                      | +        |          | +       |         |
-| A-MAC                          | +        |          |         |         |
-| CoMAM                          | +        | +        |         |         |
-| Memex(RL)                      |          | +        |         | +       |
+| Paper                          | O1 可插拔模型 | O2 主 LLM | O3 检索算法 | O4 工具概率 |O5 KV cache |
+| ------------------------------ | -------- | -------- | ------- | ------- | ------- |
+| Memory-R1                      | +        |          |         |         |         |
+| MemSearcher                    |          | +        |         |         |         |
+| General Agentic Memory         | +        |          |         |         |         |
+| Memento                        |          |          | +       |         |         |
+| Just in Time (JitRL)           |          |          |         | +       |         |
+| Fine-tuning with RAG           |          | +        |         |         |         |
+| Knowledge Modules (DCD)        |          | +        |         |         |         |
+| A-MEM                          | -        | -        | -       | -       |         |
+| MSA                            |          | +        | +       |         |         |
+| RLIF                           |          | +        |         |         |         |
+| RF-Mem                         |          |          | +       |         |         |
+| GRU-Mem                        |          | +        |         |         |         |
+| UMA                            |          | +        |         |         |         |
+| HyperRAG                       |          |          | +       |         |         |
+| Mnemis                         | -        | -        | -       | -       |         |
+| MIRA                           | +        |          |         |         |         |
+| Memory-Based Advantage Shaping | +        |          |         |         |         |
+| EMPO                           |          | +        |         |         |         |
+| MemPO                          |          | +        |         |         |         |
+| MemSifter                      | +        |          | +       |         |         |
+| A-MAC                          | +        |          |         |         |         |
+| CoMAM                          | +        | +        |         |         |         |
+| Memex(RL)                      |          | +        |         | +       |         |
+| Titans                         |        |+        |           |       | +      |
+| Mem $\alpha$                    |+       |        |          |       |        |
+| Scalingcontextfolding          |        |+        |          |       |       |
 
 > `+` = 适用  
 > `—` = 此维度不适用（无记忆系统 / 无训练过程）  
