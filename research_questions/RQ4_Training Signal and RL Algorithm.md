@@ -22,7 +22,7 @@
 
 ## 类别定义
 
-### A1 · PPO
+### A1: PPO
 
 **代表论文**：MIRA, Memory-Based Advantage Shaping
 
@@ -36,7 +36,7 @@ $$
 
 ---
 
-### A2 · GRPO
+### A2: GRPO
 
 **代表论文**：EMPO, MemPO, MemSifter (DAPO), CoMAM, Memex (MemexRL)
 
@@ -57,7 +57,7 @@ $$
 
 ---
 
-### A3 · Q-Learning / Soft Q-Learning
+### A3: Q-Learning / Soft Q-Learning
 
 **代表论文**：Memento
 
@@ -69,7 +69,7 @@ $$
 
 ---
 
-### A4 · Training-Free / Closed-Form Policy Optimization
+### A4: Training-Free / Closed-Form Policy Optimization
 
 **代表论文**：JitRL
 
@@ -105,35 +105,39 @@ $$
 ---
 ## 论文分类表
 
-| Paper                          | A1  | A2  | A3  | A4  | N/A |
-| ------------------------------ | --- | --- | --- | --- | --- |
-| Memory-R1                      | +   | +   |     |     |     |
-| MemSearcher                    |     | +   |     |     |     |
-| General Agentic Memory         |     | +   |     |     |     |
-| Memento                        |     |     | +   |     |     |
-| JitRL                          |     |     |     | +   |     |
-| Fine-tuning with RAG           |     |     |     |     | +   |
-| Knowledge Modules (DCD)        |     |     |     |     | +   |
-| A-MEM                          |     |     |     |     | +   |
-| MSA                            |     |     |     |     | +   |
-| RLIF                           |     | +   |     |     |     |
-| RF-Mem                         |     |     |     |     | +   |
-| GRU-Mem                        |     | +   |     |     |     |
-| UMA                            |     | +   |     |     |     |
-| HyperRAG                       |     |     |     |     | +   |
-| Mnemis                         |     |     |     |     | +   |
-| MIRA                           | +   |     |     |     |     |
-| Memory-Based Advantage Shaping | +   |     |     |     |     |
-| EMPO                           |     | +   |     |     |     |
-| MemPO                          |     | +   |     |     |     |
-| MemSifter                      |     | +   |     |     |     |
-| A-MAC                          |     |     |     |     | +   |
-| CoMAM                          |     | +   |     |     |     |
-| Memex (RL)                     |     | +   |     |     |     |
-| Titans                         |     |     |     |     | +   |
-| Mem-$\alpha$                   |     | +   |     |     |     |
-| Memory as Action               |     | +   |     |     |     |
-| Scaling Context Folding        |     | +   |     |     |     |
+| Paper                          | A1 PPO | A2 GRPO | A3 Q-learning | A4 Training-Free | N/A |
+| ------------------------------ | ------ | ------- | ------------- | ---------------- | --- |
+| Memory-R1                      | +      | +       |               |                  |     |
+| MemSearcher                    |        | +       |               |                  |     |
+| General Agentic Memory         |        | +       |               |                  |     |
+| Memento                        |        |         | +             |                  |     |
+| JitRL                          |        |         |               | +                |     |
+| Fine-tuning with RAG           |        |         |               |                  | +   |
+| Knowledge Modules (DCD)        |        |         |               |                  | +   |
+| A-MEM                          |        |         |               |                  | +   |
+| MSA                            |        |         |               |                  | +   |
+| RLIF                           |        | +       |               |                  |     |
+| RF-Mem                         |        |         |               |                  | +   |
+| GRU-Mem                        |        | +       |               |                  |     |
+| UMA                            |        | +       |               |                  |     |
+| HyperRAG                       |        |         |               |                  | +   |
+| Mnemis                         |        |         |               |                  | +   |
+| MIRA                           | +      |         |               |                  |     |
+| Memory-Based Advantage Shaping | +      |         |               |                  |     |
+| EMPO                           |        | +       |               |                  |     |
+| MemPO                          |        | +       |               |                  |     |
+| MemSifter                      |        | +       |               |                  |     |
+| A-MAC                          |        |         |               |                  | +   |
+| CoMAM                          |        | +       |               |                  |     |
+| Memex (RL)                     |        | +       |               |                  |     |
+| Titans                         |        |         |               |                  | +   |
+| Mem-$\alpha$                   |        | +       |               |                  |     |
+| Memory as Action               |        | +       |               |                  |     |
+| Scaling Context Folding        |        | +       |               |                  |     |
+| MAGMA                          |        |         |               |                  | +   |
+| MACLA                          |        |         |               |                  | +   |
+| LightSearcher                  |        | +       |               |                  |     |
+| MemVerse                       |        |         |               |                  | +   |
 
 > `+` = 适用  
 > `—` = 此维度不适用（无记忆系统 / 无训练过程）  

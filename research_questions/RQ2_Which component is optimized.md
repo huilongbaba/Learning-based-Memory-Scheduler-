@@ -138,6 +138,10 @@
 | Mem-$\alpha$                   | +         |          |         |         |             |
 | Memory as Action               |           | +        |         |         |             |
 | Scaling Context Folding        |           | +        |         |         |             |
+| MAGMA                          | -         | -        | -       | -       | -           |
+| MACLA                          | +         |          |         |         |             |
+| LightSearcher                  |           | +        |         | +       |             |
+| MemVerse                       | +         |          |         |         |             |
 
 > `+` = 适用  
 > `—` = 此维度不适用（无记忆系统 / 无训练过程）  
