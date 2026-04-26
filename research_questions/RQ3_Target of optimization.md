@@ -149,6 +149,10 @@ $$r_{\text{total}} = r_{\text{main}} + \sum_k \lambda_k \cdot r^{\text{aux}}_k$$
 | MACLA                          | +      | +     |         | +       |                 |       |
 | LightSearcher                  | +      | +     |         |         |                 | +     |
 | MemVerse                       | +      | +     |         |         |                 |       |
+| Inside Out                     | +      | +     |         | +       |                 |       |
+| MemBuilder                     | +      | +     |         |         |                 | +     |
+| MemoBrain                      | +      | +     |         |         |                 |       |
+| Fine-Mem                       | +      | +     |         | +       |                 | +     |
 
 > `+` = 适用  
 > `—` = 此维度不适用（无记忆系统 / 无训练过程）  

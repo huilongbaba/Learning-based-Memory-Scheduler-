@@ -195,6 +195,10 @@ $$\theta' = h(\theta, C_N) \quad \text{使得} \quad \pi_{\theta'}(\cdot \mid q)
 | MACLA                          | +        |           |               |        |          |
 | LightSearcher                  | +        |           |               | +      |          |
 | MemVerse                       | +        | +         |               | +      | +        |
+| Inside Out                     | +        | +         |               |        | +        |
+| MemBuilder                     | +        | +         |               |        |          |
+| MemoBrain                      | +        |           |               |        | +        |
+| Fine-Mem                       | +        |           |               |        | +        |
 
 > `+` = 适用  
 > `—` = 此维度不适用（无记忆系统 / 无训练过程）  
