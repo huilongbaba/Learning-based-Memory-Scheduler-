@@ -1,6 +1,6 @@
 # MAGMA: A Multi-Graph based Agentic Memory Architecture for AI Agents
 
-**Source:** [arXiv:2601.03236v2](https://arxiv.org/abs/2601.03236) (发布时间：2026-04-16，ACL 2026 Main)
+**Source:** [arXiv:2601.03236v2](https://arxiv.org/abs/2601.03236) (最后修订于 2026-04-16，ACL 2026 Main)
 
 ## 符号映射表
 

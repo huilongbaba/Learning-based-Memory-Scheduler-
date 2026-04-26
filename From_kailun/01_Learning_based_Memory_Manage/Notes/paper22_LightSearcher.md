@@ -1,6 +1,6 @@
 # LightSearcher: Efficient DeepSearch via Experiential Memory
 
-**Source:** [arXiv:2512.06653v3](https://arxiv.org/abs/2512.06653) (发布于 2025-12-10，正在投递至 ACM)
+**Source:** [arXiv:2512.06653v3](https://arxiv.org/abs/2512.06653) (最后修订于 2025-12-10，正在投递至 ACM)
 
 ---
 

@@ -1,5 +1,5 @@
 # MemVerse: Multimodal Memory for Lifelong Learning Agents
-**Source:** [arXiv:2512.03627v1](https://arxiv.org/abs/2512.03627) (2025-12-3 发布)
+**Source:** [arXiv:2512.03627v1](https://arxiv.org/abs/2512.03627) (2025-12-3 修订)
 
 ## 符号映射表
 
@@ -106,23 +106,23 @@ $$\mathcal{M}_{\text{parametric}}^{t+1} = \mathcal{M}_{\text{parametric}}^{t} + 
 
 ## 5. RQ 分析
 
-### **RQ1 (What is memory?)**
+### RQ1 (What is memory?)
 
 MemVerse 同时具备三种记忆表征：(1) 固定长度 token 窗口的 $m_s$（T2 固定长度压缩）；(2) 非参数化多层级知识图 + raw chunks 的 $m_l$（T1 非参数外部记忆，同时具有 flat + 图结构）；(3) 从 $m_l$ 蒸馏而来的独立参数化小模型 $m_p$（T4 参数化 + T5 独立可插拔辅助模块的混合）。
 
-### **RQ2 (Which component is optimized?)**
+### RQ2 (Which component is optimized?)
 
 只有参数化记忆小模型 $m_p$ 被 SFT 训练，它既不是主 LLM，也不是 RAG 式的管理器（它不做记忆管理决策，而是模仿 RAG 检索结果）。主 LLM、orchestrator、检索算法均未被训练。最接近 O2（主 LLM 参数优化）中的 "LLM 被训练" 形态，但被训练的不是主 LLM 而是独立的蒸馏模型；也可以视为 O5 之外的一种新子类——"被训练的参数化记忆替身"。
 
-### **RQ3 (Target of Optimization)**
+### RQ3 (Target of Optimization)
 
 最终追求 (1) 多模态 QA 的回答准确度（G1，ScienceQA 85.48%、MSR-VTT R@1 90.4%）；(2) 推理效率（G2，RAG 20s → 参数化记忆 2.28s，加速 89%）。不直接优化写入决策或行动奖励。
 
-### **RQ4 (Training Signal and RL Algorithm)**
+### RQ4 (Training Signal and RL Algorithm)
 
 无 RL，纯 SFT / 蒸馏。训练信号 = RAG 检索结果的 token-level CE。归入 N/A。
 
-### **RQ5 (How memory evolves, operates?)**
+### RQ5 (How memory evolves, operates?)
 
 - $g_s$：sliding window，每步丢掉最老 query
 - $g_l$：定期或知识量达到阈值时，LLM 从新 chunks 抽实体 / 关系并并入 KG

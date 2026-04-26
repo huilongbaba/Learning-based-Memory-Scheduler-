@@ -1,6 +1,6 @@
 # MACLA: Learning Hierarchical Procedural Memory for LLM Agents through Bayesian Selection and Contrastive Refinement
 
-**Source:** [arXiv:2512.18950v1](https://arxiv.org/abs/2512.18950) (2025-12-22 发布，accepted by AAMAS 2026)
+**Source:** [arXiv:2512.18950v1](https://arxiv.org/abs/2512.18950) (2025-12-22 修订，accepted by AAMAS 2026)
 
 ---
 
