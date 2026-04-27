@@ -89,7 +89,7 @@ $$
 
 ### A5: DPO
 
-**代表论文**：MemoBrain（用于 memory management 操作的偏好对训练）。
+**代表论文**：MemoBrain
 
 **定义**：基于成对偏好数据 $(O^+, O^-)$ 的策略优化，通过 Bradley-Terry preference model 推导出闭式 loss，避免显式 reward function。包含 DPO、IPO、KTO 等家族变体。
 
