@@ -153,6 +153,9 @@ $$r_{\text{total}} = r_{\text{main}} + \sum_k \lambda_k \cdot r^{\text{aux}}_k$$
 | MemBuilder                     | +      | +     |         |         |                 | +     |
 | MemoBrain                      | +      | +     |         |         |                 |       |
 | Fine-Mem                       | +      | +     |         | +       |                 | +     |
+| LIGHTMEM                       | -      | -     | -       | -       | -               | -     |
+| AtomMem                        | +      |       |         |         | +               |       |
+| HiMeS                          | +      |       |         |         |                 | +     |
 
 > `+` = 适用  
 > `—` = 此维度不适用（无记忆系统 / 无训练过程）  

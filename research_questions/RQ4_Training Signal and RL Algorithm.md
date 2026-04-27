@@ -143,7 +143,7 @@ $$\mathcal{L}_{\text{DPO}} = -\mathbb{E} \log \sigma \left( \beta \log \frac{\pi
 | Titans                         |        |         |               |                  |        | +   |
 | Mem-$\alpha$                   |        | +       |               |                  |        |     |
 | Memory as Action               |        | +       |               |                  |        |     |
-| Scaling Context Folding        |        | +       |               |                  | IIM    |     |
+| Scaling Context Folding        |        | +       |               |                  |        |     |
 | MAGMA                          |        |         |               |                  |        | +   |
 | MACLA                          |        |         |               |                  |        | +   |
 | LightSearcher                  |        | +       |               |                  |        |     |
@@ -152,6 +152,9 @@ $$\mathcal{L}_{\text{DPO}} = -\mathbb{E} \log \sigma \left( \beta \log \frac{\pi
 | MemBuilder                     |        | +       |               |                  |        |     |
 | MemoBrain                      |        |         |               |                  | +      | +   |
 | Fine-Mem                       |        | +       |               |                  |        |     |
+| LIGHTMEM                       |        |         |               |                  |        | +   |
+| AtomMem                        |        | +       |               |                  |        |     |
+| HiMeS                          |        | +       |               |                  |        |     |
 
 > `+` = 适用  
 > `—` = 此维度不适用（无记忆系统 / 无训练过程）  
