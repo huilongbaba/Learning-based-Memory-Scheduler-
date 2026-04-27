@@ -1,6 +1,7 @@
 # MemVerse: Multimodal Memory for Lifelong Learning Agents
 **Source:** [arXiv:2512.03627v1](https://arxiv.org/abs/2512.03627) (2025-12-3 修订)
 
+---
 ## 符号映射表
 
 | 论文原始符号 | 框架符号 | 说明 |
