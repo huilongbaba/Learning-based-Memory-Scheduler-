@@ -1,6 +1,6 @@
 # Training Plug-and-Play Knowledge Modules with Deep Context Distillation
 
-**Source:** [arXiv:2503.08727](https://arxiv.org/abs/2503.08727) (Published at COLM 2025)
+**Source:** [arXiv:2503.08727](https://arxiv.org/abs/2503.08727) (2025-08-08 修订，Published at COLM 2025)
 
 ---
 

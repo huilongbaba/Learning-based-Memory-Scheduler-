@@ -1,6 +1,6 @@
 # MemBuilder: Reinforcing LLMs for Long-Term Memory Construction via Attributed Dense Rewards
 
-**Source:** [arXiv:2601.05488v3](https://arxiv.org/abs/2601.05488) (2026-04-18 修订)
+**Source:** [arXiv:2601.05488v3](https://arxiv.org/abs/2601.05488) (2026-04-18 修订， ACL Rolling Review)
 
 ---
 

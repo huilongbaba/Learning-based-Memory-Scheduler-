@@ -1,6 +1,6 @@
 # Just-In-Time Reinforcement Learning: Continual Learning in LLM Agents Without Gradient Updates
 
-**Source:** arXiv:2601.18510v1 [cs.LG], Preprint, January 2026
+**Source:** [arXiv:2601.18510v1](https://arxiv.org/abs/2601.18510)（2026-01-26 修订，Accepted as an Oral presentation at the ICLR 2026 Workshop on MemAgents）
 
 ---
 

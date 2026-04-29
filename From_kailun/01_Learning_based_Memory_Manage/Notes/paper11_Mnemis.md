@@ -1,6 +1,6 @@
 # Mnemis: Dual-Route Retrieval on Hierarchical Graphs for Long-Term LLM Memory
 
-**Source:** [https://arxiv.org/abs/2602.15313](https://arxiv.org/abs/2602.15313) (February 2026) Accepted to ACL2026
+**Source:** [https://arxiv.org/abs/2602.15313](https://arxiv.org/abs/2602.15313) (2026-04-10 修订，Accepted to ACL2026）
 
 ---
 

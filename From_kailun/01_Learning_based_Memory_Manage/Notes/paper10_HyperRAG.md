@@ -1,6 +1,6 @@
 # HyperRAG: Reasoning N-ary Facts over Hypergraphs for Retrieval Augmented Generation
 
-**Source:** [https://arxiv.org/pdf/2602.14470v1](https://arxiv.org/pdf/2602.14470v1) (Feb 2026, WWW '26)
+**Source:** [https://arxiv.org/pdf/2602.14470v1](https://arxiv.org/pdf/2602.14470v1) (2026-02-16 修订, accepted by WWW '26)
 
 ---
 

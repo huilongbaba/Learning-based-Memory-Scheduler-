@@ -1,6 +1,6 @@
 # Memento: Fine-tuning LLM Agents without Fine-tuning LLMs
 
-**Source:** [arXiv:2508.16153v2](https://arxiv.org/abs/2508.16153) (cs.LG, 25 Aug 2025)
+**Source:** [arXiv:2508.16153v2](https://arxiv.org/abs/2508.16153) (2025-08-25 修订)
 
 ---
 

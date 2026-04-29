@@ -1,6 +1,6 @@
 # MemPO: Self-Memory Policy Optimization for Long-Horizon Agents
 
-**Source:** [https://arxiv.org/abs/2603.00680](https://arxiv.org/abs/2603.00680) (March 2026)
+**Source:** [https://arxiv.org/abs/2603.00680](https://arxiv.org/abs/2603.00680) (2026-04-09 修订)
 
 ---
 

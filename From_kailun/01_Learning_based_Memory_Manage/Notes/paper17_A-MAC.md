@@ -1,6 +1,6 @@
 # Adaptive Memory Admission Control for LLM Agents (A-MAC)
 
-**Source:** [arXiv:2603.04549](https://arxiv.org/abs/2603.04549) (Published at ICLR 2026 Workshop MemAgent, 2026-03-04)
+**Source:** [arXiv:2603.04549](https://arxiv.org/abs/2603.04549) (2026-03-04 修订，Published at ICLR 2026 Workshop MemAgent)
 
 ---
 ## 符号映射表

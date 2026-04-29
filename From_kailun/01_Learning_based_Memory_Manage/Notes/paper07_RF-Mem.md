@@ -1,6 +1,6 @@
 # Evoking User Memory: Personalizing LLM via Recollection-Familiarity Adaptive Retrieval (RF-Mem)
 
-**Source:** [https://arxiv.org/abs/2603.09250](https://arxiv.org/abs/2603.09250) (2026-03-10, Accepted by ICLR 2026)
+**Source:** [https://arxiv.org/abs/2603.09250](https://arxiv.org/abs/2603.09250) (2026-03-10 修订, Accepted by ICLR 2026)
 
 ---
 

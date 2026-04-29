@@ -1,6 +1,6 @@
 # MemSifter: Offloading LLM Memory Retrieval via Outcome-Driven Proxy Reasoning
 
-**Source:** [https://arxiv.org/abs/2603.03379](https://arxiv.org/abs/2603.03379) (2026-03-03)
+**Source:** [https://arxiv.org/abs/2603.03379](https://arxiv.org/abs/2603.03379) (2026-03-03 修订)
 
 ---
 ## 符号映射表

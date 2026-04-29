@@ -1,6 +1,6 @@
 # Inside Out: Evolving User-Centric Core Memory Trees for Long-Term Personalized Dialogue Systems
 
-**Source:** [https://arxiv.org/abs/2601.05171v2](https://arxiv.org/abs/2601.05171v2) (2026-1-25 修订)
+**Source:** [https://arxiv.org/abs/2601.05171v2](https://arxiv.org/abs/2601.05171v2) (2026-1-25 修订， ACL Rolling Review)
 
 ---
 ## 符号映射表

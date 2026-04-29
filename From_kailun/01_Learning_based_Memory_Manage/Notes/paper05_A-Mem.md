@@ -1,6 +1,6 @@
 # A-Mem: Agentic Memory for LLM Agents
 
-**Source:** [https://arxiv.org/abs/2502.12110](https://arxiv.org/abs/2502.12110) (Feb 2025, v11: Oct 2025)
+**Source:** [https://arxiv.org/abs/2502.12110](https://arxiv.org/abs/2502.12110) (2025-10-08 修订, NeurIPS 2025)
 
 ---
 

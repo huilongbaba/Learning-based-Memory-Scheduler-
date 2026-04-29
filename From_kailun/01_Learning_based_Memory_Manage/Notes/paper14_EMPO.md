@@ -1,6 +1,6 @@
 # Exploratory Memory-Augmented LLM Agent via Hybrid On- and Off-Policy Optimization (EMPO²)
 
-**Source:** [https://arxiv.org/pdf/2602.23008](https://arxiv.org/pdf/2602.23008) (ICLR 2026, Feb 2026)
+**Source:** [https://arxiv.org/pdf/2602.23008](https://arxiv.org/pdf/2602.23008) (2026-03-06 修订，ICLR 2026)
 
 ---
 

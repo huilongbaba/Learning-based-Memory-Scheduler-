@@ -1,6 +1,6 @@
 # Memory-Based Advantage Shaping for LLM-Guided Reinforcement Learning
 
-**Source:** [https://arxiv.org/abs/2602.17931](https://arxiv.org/abs/2602.17931) (February 2026, AAAI-26)
+**Source:** [https://arxiv.org/abs/2602.17931](https://arxiv.org/abs/2602.17931) (2026-02-20 修订, AAAI-26)
 
 ---
 

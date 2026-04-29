@@ -1,6 +1,6 @@
 # When to Memorize and When to Stop: Gated Recurrent Memory for Long-Context Reasoning
 
-**Source:** [https://arxiv.org/abs/2602.10560](https://arxiv.org/abs/2602.10560) (February 2026)
+**Source:** [https://arxiv.org/abs/2602.10560](https://arxiv.org/abs/2602.10560) (2026-02-11 修订)
 
 ---
 

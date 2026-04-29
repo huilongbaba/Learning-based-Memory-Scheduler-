@@ -1,6 +1,6 @@
 # MSA: Memory Sparse Attention for Efficient End-to-End Memory Model Scaling to 100M Tokens
 
-**Source:** [arXiv:2603.23516](https://arxiv.org/abs/2603.23516) (2026-03-06)
+**Source:** [arXiv:2603.23516](https://arxiv.org/abs/2603.23516) (2026-03-06 修订)
 
 ---
 

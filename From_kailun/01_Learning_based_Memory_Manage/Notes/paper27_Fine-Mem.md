@@ -1,6 +1,6 @@
 # Fine-Mem: Fine-Grained Feedback Alignment for Long-Horizon Memory Management
 
-**Source:** [arXiv:2601.08435v1](https://arxiv.org/abs/2601.08435) (2026-01-13 修订)
+**Source:** [arXiv:2601.08435v1](https://arxiv.org/abs/2601.08435) (2026-01-13 修订， ACL Rolling Review)
 
 ---
 

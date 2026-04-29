@@ -1,6 +1,6 @@
 # Memex(RL): Scaling Long-Horizon LLM Agents via Indexed Experience Memory
 
-**Source:** [arXiv:2603.04257v1](https://arxiv.org/abs/2603.04257) (2026-03-04)
+**Source:** [arXiv:2603.04257v1](https://arxiv.org/abs/2603.04257) (2026-03-04 修订)
 
 ---
 ## 符号映射表

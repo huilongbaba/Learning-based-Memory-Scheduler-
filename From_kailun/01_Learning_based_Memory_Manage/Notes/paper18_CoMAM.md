@@ -1,6 +1,6 @@
 # Collaborative Multi-Agent Optimization for Personalized Memory System (CoMAM)
 
-**Source:** [arXiv:2603.12631v1](https://arxiv.org/abs/2603.12631) (2026-03-13)
+**Source:** [arXiv:2603.12631v1](https://arxiv.org/abs/2603.12631) (2026-03-13 修订)
 
 ---
 ## 符号映射表

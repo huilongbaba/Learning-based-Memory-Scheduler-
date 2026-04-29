@@ -1,6 +1,6 @@
 # Learning to Remember: End-to-End Training of Memory Agents for Long-Context Reasoning (UMA)
 
-**Source:** [https://arxiv.org/abs/2602.18493](https://arxiv.org/abs/2602.18493) (2026-02-13)
+**Source:** [https://arxiv.org/abs/2602.18493](https://arxiv.org/abs/2602.18493) (2026-02-13 修订)
 
 ---
 
