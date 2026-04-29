@@ -149,6 +149,10 @@
 | LIGHTMEM                       | -         | -        | -       | -       | -           |
 | AtomMem                        |           | +        |         |         |             |
 | HiMeS                          | +         |          |         |         |             |
+| Hela-Mem                       | -         | -        | -       | -       | -           |
+| Freshness-Aware PER            |           | +        |         |         |             |
+| MemReader                      | +         |          |         | +       |             |
+| M3-Agent                       |           | +        |         |         |             |
 
 > `+` = 适用  
 > `—` = 此维度不适用（无记忆系统 / 无训练过程）  

@@ -16,6 +16,7 @@
 | **A2**  | GRPO                                            | group-relative advantage，无需 value network；包含 DAPO、MemexRL、Task-Stratified GRPO、Multi-Conv DAPO 等变体 | EMPO, MemPO, MemSifter, CoMAM, Memex        |
 | **A3**  | Q-Learning / Soft Q-Learning                    | 价值型，TD / Bellman 回归                                                                                | Memento                                     |
 | **A4**  | Training-Free / Closed-Form Policy Optimization | 无梯度更新，KL-约束下的闭式最优策略                                                                                | JitRL                                       |
+| A5      | DPO                                             | 基于成对偏好数据 $(O^+, O^-)$ 的策略优化，避免显式 reward function                                                   | MemoBrain                                   |
 | **N/A** | Non-RL Methods                                  | 纯 SFT、蒸馏、监督、prompt-engineering、training-free                                                       | A-Mem, A-MAC, HyperRAG, MSA, Mnemis, RF-Mem |
 
 ---
@@ -155,6 +156,10 @@ $$\mathcal{L}_{\text{DPO}} = -\mathbb{E} \log \sigma \left( \beta \log \frac{\pi
 | LIGHTMEM                       |        |         |               |                  |        | +   |
 | AtomMem                        |        | +       |               |                  |        |     |
 | HiMeS                          |        | +       |               |                  |        |     |
+| Hela-Mem                       |        |         |               |                  |        | +   |
+| Freshness-Aware PER            | +      |         |               |                  |        |     |
+| MemReader                      |        | +       |               |                  |        |     |
+| M3-Agent                       |        | +       |               |                  |        |     |
 
 > `+` = 适用  
 > `—` = 此维度不适用（无记忆系统 / 无训练过程）  
