@@ -1,6 +1,6 @@
 # Fine-Tuning with RAG for Improving LLM Learning of New Skills
 
-**Source:** [arXiv:2510.01375](https://arxiv.org/abs/2510.01375) (2025-10-01 修订, published at ICLR 2026)
+**Source:** [arXiv:2510.01375](https://arxiv.org/abs/2510.01375) (2025-10-01 修订, ICLR 2026 rejected，8622)
 
 ---
 

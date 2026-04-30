@@ -121,7 +121,7 @@
 
 ### RQ4 (Training Signal and RL Algorithm)
 
-本文使用 PPO，critic-free policy gradient + 全局 advantage normalization + clipping。off-policy 修正使用 IS 权重而非 KL 约束。
+本文使用 REINFORCE++，critic-free policy gradient + 全局 advantage normalization + clipping。off-policy 修正使用 IS 权重而非 KL 约束。
 
 ### RQ5 (How memory evolves, operates?)
 

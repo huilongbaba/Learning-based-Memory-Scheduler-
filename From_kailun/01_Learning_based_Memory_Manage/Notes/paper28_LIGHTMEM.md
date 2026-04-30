@@ -1,6 +1,6 @@
 # LightMem: Lightweight and Efficient Memory-Augmented Generation
 
-**Source:** [arXiv:2510.18866v4](https://arxiv.org/abs/2510.18866) （2026-2-28 ,已被 ICLR 2026 接收）
+**Source:** [arXiv:2510.18866v4](https://arxiv.org/abs/2510.18866) （2026-2-28 , Accepted at ICLR 2026 poster，86664）
 
 ---
 
@@ -29,7 +29,7 @@
 
 这篇文章用了对话历史的原始 turn 序列作为输入，借助一个轻量化的预训练压缩器和它的 attention 矩阵，把冗余 token 滤掉、把语义连续的 turn 聚成 topic，再用主 LLM 把每个 topic 摘要成长期记忆条目。更新过程被搬到"离线 sleep-time"做并行执行。
 最后得到了一个完全 training-free 的三级记忆 pipeline（感觉记忆 → 短期记忆 → 长期记忆），可以即插即用地配在任何主 LLM 之上，没有任何参数被训练或微调。
-这篇文章追求的目标不是训练信号意义上的优化，而是在维持甚至提升QA 准确率的前提下，把记忆构建阶段的 token 消耗、API 调用数、运行时延 大幅压低。
+这篇文章追求的目标不是训练信号意义上的优化，而是在维持甚至提升QA 准确率的前提下，把记忆构建阶段的 token 消耗、API 调用数、运行时延大幅压低。
 
 ---
 
@@ -114,7 +114,7 @@ $$Q(e_i) = \text{Topk}\lbrace (e_j, \text{sim}(v_i, v_j)) \mid t_j \geq t_i,\ j 
 
 完全由**手工触发规则 + 阈值**驱动。无学习得到的策略 $\pi$，无温度调节，无多轮 replan。变量是手工调的 $(r, th)$ 二元组。
 
-> 把传统 memory system 中串行、阻塞、test-time 的更新负担彻底搬到了并行、异步、offline 的位置。这个 trick 是架构层面的，不依赖训练，但收益极大（runtime 数倍下降）。值得未来 RL-based memory 工作借鉴："什么时候更新"和"怎么更新"是两个正交问题。
+> 把传统 memory system 中串行、阻塞、test-time 的更新负担彻底搬到了并行、异步、offline 的位置。这个 trick 是架构层面的，不依赖训练，但收益极大（runtime 数倍下降）。
 
 ---
 

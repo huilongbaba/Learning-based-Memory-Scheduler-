@@ -1,6 +1,6 @@
 # M3-Agent: Seeing, Listening, Remembering, and Reasoning — A Multimodal Agent with Long-Term Memory
 
-**Source:** [arXiv / ICLR 2026 paper](https://openreview.net/pdf?id=PMz29A7Muq) (2026-4-11 修订，Accepted at ICLR 2026 poster)
+**Source:** [arXiv / ICLR 2026 paper](https://openreview.net/pdf?id=PMz29A7Muq) (2026-4-11 修订，Accepted at ICLR 2026 poster，842)
 
 ## 符号映射表
 

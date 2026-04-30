@@ -1,6 +1,6 @@
 # MIRA: Memory-Integrated Reinforcement Learning Agent with Limited LLM Guidance
 
-**Source:** [https://arxiv.org/abs/2602.17930](https://arxiv.org/abs/2602.17930) (2026-02-20 修订, ICLR 2026)
+**Source:** [https://arxiv.org/abs/2602.17930](https://arxiv.org/abs/2602.17930) (2026-02-20 修订, Accepted at ICLR 2026 poster，6642)
 
 ---
 
