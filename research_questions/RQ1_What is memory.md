@@ -173,7 +173,7 @@ $$\theta' = h(\theta, C_N) \quad \text{使得} \quad \pi_{\theta'}(\cdot \mid q)
 | Knowledge Modules (DCD)        |          |           |               | +      |          |
 | A-MEM                          | +        |           |               |        |          |
 | MSA                            | +        |           | +             |        |          |
-| RLIF                           | —        | —         | —             | —      | —        |
+| RLIF                           | -        | -         | -             | -      | -        |
 | RF-Mem                         | +        |           |               |        |          |
 | GRU-Mem                        |          | +         |               |        |          |
 | UMA                            | +        |           |               |        |          |
@@ -206,6 +206,8 @@ $$\theta' = h(\theta, C_N) \quad \text{使得} \quad \pi_{\theta'}(\cdot \mid q)
 | Freshness-Aware PER            | +        |           |               |        |          |
 | MemReader                      | +        |           |               |        | +        |
 | M3-Agent                       | +        |           |               |        |          |
+| CoARS                          | +        |           |               | +      |          |
+| HiExp                          | +        |           |               |        |          |
 
 > `+` = 适用  
 > `—` = 此维度不适用（无记忆系统 / 无训练过程）  

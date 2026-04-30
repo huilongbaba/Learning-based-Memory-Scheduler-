@@ -125,14 +125,14 @@ $$r_{\text{total}} = r_{\text{main}} + \sum_k \lambda_k \cdot r^{\text{aux}}_k$$
 | JitRL                          |        |       | +       |         |                 |       |
 | Fine-tuning with RAG           | +      |       |         |         |                 |       |
 | Knowledge Modules (DCD)        | +      |       |         |         |                 |       |
-| A-MEM                          | —      | —     | —       |         |                 |       |
+| A-MEM                          | -      | -     | -       | -       | -               | -     |
 | MSA                            | +      |       |         |         |                 |       |
 | RLIF                           | +      |       |         |         |                 |       |
 | RF-Mem                         | +      | +     |         |         |                 |       |
 | GRU-Mem                        | +      | +     | +       | +       |                 |       |
 | UMA                            | +      |       | +       |         |                 |       |
 | HyperRAG                       | +      | +     |         |         |                 |       |
-| Mnemis                         | —      | —     | —       |         |                 |       |
+| Mnemis                         | -      | -     | -       | -       | -               | -     |
 | MIRA                           | +      | +     |         |         |                 |       |
 | Memory-Based Advantage Shaping | +      | +     |         |         |                 |       |
 | EMPO                           | +      |       |         |         |                 |       |
@@ -160,6 +160,8 @@ $$r_{\text{total}} = r_{\text{main}} + \sum_k \lambda_k \cdot r^{\text{aux}}_k$$
 | Freshness-Aware PER            | +      | +     |         |         | +               |       |
 | MemReader                      |        | +     | +       | +       |                 | +     |
 | M3-Agent                       | +      |       |         |         |                 |       |
+| CoARS                          | +      |       |         |         |                 |       |
+| HiExp                          | +      |       |         |         |                 |       |
 
 > `+` = 适用  
 > `—` = 此维度不适用（无记忆系统 / 无训练过程）  
