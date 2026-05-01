@@ -195,6 +195,10 @@ $$\hat{A}_t = \frac{R_t - \mu_{\text{batch}}}{\sigma_{\text{batch}} + \epsilon},
 | M3-Agent                       |        | +       |               |                  |        |              |     |
 | CoARS                          |        |         |               |                  |        | +            |     |
 | HiExp                          |        | +       |               |                  |        |              |     |
+| MEMORY-T1                      |        | +       |               |                  |        |              |     |
+| MEM1                           | +      |         |               |                  |        |              |     |
+| LMLM                           |        |         |               |                  |        |              | +   |
+| PTE                            |        | +       |               |                  |        |              |     |
 
 > `+` = 适用  
 > `—` = 此维度不适用（无记忆系统 / 无训练过程）  

@@ -208,6 +208,10 @@ $$\theta' = h(\theta, C_N) \quad \text{使得} \quad \pi_{\theta'}(\cdot \mid q)
 | M3-Agent                       | +        |           |               |        |          |
 | CoARS                          | +        |           |               | +      |          |
 | HiExp                          | +        |           |               |        |          |
+| MEMORY-T1                      | +        |           |               |        |          |
+| MEM1                           |          | +         |               |        |          |
+| LMLM                           | +        |           |               |        |          |
+| PTE                            |          | +         | +             | +      |          |
 
 > `+` = 适用  
 > `—` = 此维度不适用（无记忆系统 / 无训练过程）  
