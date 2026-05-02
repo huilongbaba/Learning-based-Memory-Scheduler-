@@ -199,6 +199,7 @@ $$\hat{A}_t = \frac{R_t - \mu_{\text{batch}}}{\sigma_{\text{batch}} + \epsilon},
 | MEM1                           | +      |         |               |                  |        |              |     |
 | LMLM                           |        |         |               |                  |        |              | +   |
 | PTE                            |        | +       |               |                  |        |              |     |
+| LaMer                          |        | +       |               |                  |        |              |     |
 
 > `+` = 适用  
 > `—` = 此维度不适用（无记忆系统 / 无训练过程）  

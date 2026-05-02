@@ -212,6 +212,7 @@ $$\theta' = h(\theta, C_N) \quad \text{使得} \quad \pi_{\theta'}(\cdot \mid q)
 | MEM1                           |          | +         |               |        |          |
 | LMLM                           | +        |           |               |        |          |
 | PTE                            |          | +         | +             | +      |          |
+| LaMer                          | +        |           |               |        |          |
 
 > `+` = 适用  
 > `—` = 此维度不适用（无记忆系统 / 无训练过程）  
