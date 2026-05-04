@@ -61,25 +61,49 @@
 
 ### T1：非参数化外部记忆（Non-Parametric External Memory）
 
-> 代表：Memory-R1, Memento, Just in Time, Mem-α, A-MEM, HyperRAG
-
-**定义**：$m_l$ 是一个存放于主 LLM 之外的、以离散条目形式组织的可 CRUD（Create / Read / Update / Delete）记忆集合。条目不固化在模型权重中，通过检索机制 $v$ 被召回，通过更新函数 $g_l$ 被写入与维护。
-
-**三个共性**：
-
-1. **非参数化**：条目是离散可寻址对象（文本 / 结构化记录 / 图节点 / 边），而非模型权重的一部分。
-2. **外部**：存储位置独立于主 LLM 之外，可被单独加载 / 替换 / 清空。
-3. **可寻址**：存在一个检索机制 $v(q, m_l)$ 能以查询 $q$ 为输入召回相关条目。
+**定义**：$m_l$ 是存放于主 LLM 之外的、以离散条目形式组织的可寻址记忆集合。
+条目不固化在模型权重中，通过检索机制 $v$ 被召回。
 
 **统一形式化**：
 
-$$m_l = {e_i}_{i=1}^{|m_l|}, \quad e_i = (\text{key}_i, \text{content}_i, \text{meta}_i, \text{struct}_i)$$
+$$m_l = \{e_i\}_{i=1}^{|m_l|}, \quad e_i = (\text{key}_i, \text{content}_i, \text{meta}_i, \text{struct}_i)$$
 
 $$v: (q, m_l) \rightarrow \text{top-}k(\text{score}(q, e_i))$$
 
-$$g_l: (m_l^{(t)}, m_s^{(t)}, \text{trigger}) \rightarrow m_l^{(t+1)}$$
+**三个共性**：
+1. **非参数化**：条目是离散可寻址对象。
+2. **外部**：存储位置独立于主 LLM。
+3. **可寻址**：存在检索机制 $v$。
 
-其中 $\text{struct}_i$ 是可选的结构信息（层级标签、图节点属性等），$\text{score}$ 可为 embedding 相似度、图距离、关键词匹配或其混合。
+T1 内部按 $m_l$ 内容来源进一步划分为 T1a / T1b。
+
+---
+#### T1a：Static RAG
+
+> 代表：经典 RAG, GraphRAG, HyperRAG
+
+**定义**：$m_l$ 在 agent 运行前已构建完成，内容来源于与当前 agent 交互轨迹无关的外部语料（文档库、知识图谱、维基等）。$g_l$ 在 agent 运行期间不被触发，或仅以极低频率（如离线刷新）触发。
+
+**形式化**：
+
+$$m_l^{(t)} = m_l^{(0)}, \quad \forall t \geq 0$$
+
+或更宽松地：$m_l$ 的演化与 $\{(q^{(t)}, o^{(t)})\}_{t}$ 不相关。
+
+---
+#### T1b：Dynamic RAG
+
+> 代表：Mem0, A-MEM, Memory-R1, LightMem
+
+**定义**：$m_l$ 由 agent 在运行过程中持续生长，条目通过 $g_l$ 从交互轨迹 $\{(q^{(t)}, o^{(t)}, \text{tool calls}, \ldots)\}$ 中抽取、写入、维护。$m_l^{(0)}$ 通常为空集或极小初始集。
+
+**形式化补充**：
+
+$$m_l^{(t+1)} = g_l(m_l^{(t)}, \text{trace}^{(t)}, \text{trigger})$$
+
+其中 $\text{trace}^{(t)}$ 是当前 episode 的交互信息。
+
+> $g_l$ 的触发时机可从 per-turn online（如 Mem0 默认实现）连续过渡到 batched offline（如 LightMem 的 sleep-time update），二者本质相同，仅在 latency / consistency 上做不同权衡。
 
 ---
 
